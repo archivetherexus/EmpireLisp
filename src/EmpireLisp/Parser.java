@@ -53,7 +53,12 @@ public class Parser {
         Expression result;
         String token = readToken(stream);
 
-        if (token.equals("(")) {
+        if (token == null) {
+            System.out.println("ERROR: Possibly too many parenthesis!"); // TODO: Throw syntax error.
+            return null;
+        }
+
+        else if (token.equals("(")) {
             result = new ExpressionPair(null, null);
             ExpressionPair head = (ExpressionPair) result;
             Expression expression = parseExpression(stream);
@@ -86,22 +91,11 @@ public class Parser {
         }
     }
 
-    public static void readTokenTest() {
-        ArrayList<String> expectedList = new ArrayList<String>(){{
-            add("(");
-            add("hello");
-            add("world");
-            add("(");
-            add("how");
-            add("are");
-            add("you");
-            add(")");
-            add(")");
-        }};
+    private static void readTokenTestList(String testString, ArrayList<String> expectedList) {
 
         ArrayList<String> resultList = new ArrayList<String>();
         Parser parser = new Parser();
-        PushbackInputStream stream = fromString("(hello world (how are you))");
+        PushbackInputStream stream = fromString(testString);
         String str = parser.readToken(stream);
         while (str != null) {
             resultList.add(str);
@@ -125,6 +119,32 @@ public class Parser {
         if (!equal) {
             throw new RuntimeException("Parser.readTokenTest() failed. Lists are not equal!");
         }
+    }
+
+    public static void readTokenTest() {
+        readTokenTestList("(hello world (how are you))", new ArrayList<String>(){{
+            add("(");
+            add("hello");
+            add("world");
+            add("(");
+            add("how");
+            add("are");
+            add("you");
+            add(")");
+            add(")");
+        }});
+
+        readTokenTestList("( + 2 ( + 4 4 ) )", new ArrayList<String>(){{
+            add("(");
+            add("+");
+            add("2");
+            add("(");
+            add("+");
+            add("4");
+            add("4");
+            add(")");
+            add(")");
+        }});
     }
 
     public static void parseExpressionTest() {

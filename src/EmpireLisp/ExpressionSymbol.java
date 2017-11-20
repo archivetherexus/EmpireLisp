@@ -15,4 +15,9 @@ public class ExpressionSymbol extends Expression {
     public String toString() {
         return symbol;
     }
+
+    @Override
+    public Expression eval(Environment environment) {
+        return environment.getVariable(symbol);
+    }
 }
