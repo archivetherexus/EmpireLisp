@@ -17,7 +17,7 @@ public class ExpressionSymbol extends Expression {
     }
 
     @Override
-    public Expression eval(Environment environment) {
+    public Expression eval(Environment environment) throws LispException {
         return environment.getVariable(symbol);
     }
 }

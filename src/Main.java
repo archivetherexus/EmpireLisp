@@ -1,6 +1,7 @@
 import EmpireLisp.*;
 
 import java.io.*;
+import java.util.Scanner;
 
 /**
  * @author Tyrerexus
@@ -11,92 +12,30 @@ public class Main {
     public static void main(String[] args) throws UnsupportedEncodingException {
         Parser.readTokenTest();
         Parser.parseExpressionTest();
+        Scanner scanner = new Scanner(System.in);
 
-        Parser parser = new Parser();
-        Environment environment = new Environment(null);
-        environment.setVariable("lambda", new ExpressionPrimitive() {
-            @Override
-            public Expression apply(Environment environment, Expression arguments) {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
+        try {
+            Parser parser = new Parser();
+            Environment environment = Environment.makeStandardEnvironment();
 
-                    if (firstPair.left instanceof  ExpressionPair && firstPair.right instanceof ExpressionPair) {
-                        ExpressionPair argumentList = (ExpressionPair) firstPair.left;
-                        ExpressionPair bodyList = (ExpressionPair) firstPair.right;
-                        return new ExpressionLambda(environment, argumentList, bodyList);
-                    }
-                }
-                System.out.println("ERROR: Arity miss-match!"); // TODO: Throw error!
-                return null;
+            //Expression expression = parser.parseExpression(Parser.fromString("(- ( + 2 ( + 4 4 )) 1)"));
+            /*Expression expression = parser.parseExpression(Parser.fromString("((lambda (x y) 33 (+ x y)) 42 8)"));
+            Expression expression2 = parser.parseExpression(Parser.fromString("(+ (lambda (x) 1) 1)"));
+            String result = expression.eval(environment).toString();
+            String result2 = expression2.eval(environment).toString();
+            System.out.println(result);
+            System.out.println(result2);*/
+            while (true) {
+                System.out.print("> ");
+                Expression read = parser.parseExpression(Parser.fromString(scanner.nextLine()));
+                System.out.println("Read: " + read);
+                Expression result = read.eval(environment);
+                System.out.println(result);
             }
-
-            @Override
-            public boolean isLazyEval() {
-                return true;
-            }
-        });
-        environment.setVariable("+", new ExpressionPrimitive() {
-            @Override
-            public Expression apply(Environment environment,Expression arguments) {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number + valueB.number);
-                            }
-                        }
-                    }
-                }
-                System.out.println("ERROR: Arity miss-match!"); // TODO: Throw error!
-                return null;
-            }
-
-            @Override
-            public boolean isLazyEval() {
-                return false;
-            }
-        });
-        environment.setVariable("-", new ExpressionPrimitive() {
-            @Override
-            public Expression apply(Environment environment, Expression arguments) {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number - valueB.number);
-                            }
-                        }
-                    }
-                }
-                System.out.println("ERROR: Arity miss-match!"); // TODO: Throw error!
-                return null;
-            }
-
-            @Override
-            public boolean isLazyEval() {
-                return false;
-            }
-        });
-        //Expression expression = parser.parseExpression(Parser.fromString("(- ( + 2 ( + 4 4 )) 1)"));
-        Expression expression = parser.parseExpression(Parser.fromString("((lambda (x y) 33 (+ x y)) 42 8)"));
-        String result = expression.eval(environment).toString();
-        System.out.println(result);
+        }
+        catch (LispException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
 }

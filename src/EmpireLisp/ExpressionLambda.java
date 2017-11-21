@@ -14,7 +14,7 @@ public class ExpressionLambda extends Expression implements IApplyable {
     List<Expression> body;
     Environment environment;
 
-    public ExpressionLambda(Environment environment, ExpressionPair argumentList, ExpressionPair bodyList) {
+    public ExpressionLambda(Environment environment, ExpressionPair argumentList, ExpressionPair bodyList) throws LispException {
         this.environment = new Environment(environment);
         this.body = bodyList.toList();
         this.arguments = new ArrayList<>();
@@ -24,7 +24,7 @@ public class ExpressionLambda extends Expression implements IApplyable {
                 this.arguments.add(((ExpressionSymbol) argumentList.left).symbol);
             }
             else {
-                System.out.println("ERROR: Only symbols are allowed in the argument list!"); // TODO: Throw error.
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument list!");
             }
 
             if (argumentList.right instanceof  ExpressionPair) {
@@ -48,7 +48,7 @@ public class ExpressionLambda extends Expression implements IApplyable {
     }
 
     @Override
-    public Expression apply(Environment environment, Expression uncheckedArguments) {
+    public Expression apply(Environment environment, Expression uncheckedArguments) throws LispException {
         Expression result = null;
 
         if (uncheckedArguments instanceof ExpressionPair) {

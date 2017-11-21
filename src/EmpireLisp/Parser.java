@@ -49,13 +49,12 @@ public class Parser {
         }
     }
 
-    public Expression parseExpression(PushbackInputStream stream) {
+    public Expression parseExpression(PushbackInputStream stream) throws LispException {
         Expression result;
         String token = readToken(stream);
 
         if (token == null) {
-            System.out.println("ERROR: Possibly too many parenthesis!"); // TODO: Throw syntax error.
-            return null;
+            throw new LispException(LispException.ErrorType.PARSE_ERROR, "Possibly unmatched parenthesis!");
         }
 
         else if (token.equals("(")) {
@@ -148,11 +147,16 @@ public class Parser {
     }
 
     public static void parseExpressionTest() {
-        String expectedString = "(123.0 . ((World . ()) . ()))";
-        Parser parser = new Parser();
-        PushbackInputStream stream = Parser.fromString("(123 (World))");
-        if (!expectedString.equals(parser.parseExpression(stream).toString())) {
-            throw new RuntimeException("Parser.parseExpressionTest() failed. Result didn't match the expected string!");
+        try {
+            String expectedString = "(123.0 . ((World . ()) . ()))";
+            Parser parser = new Parser();
+            PushbackInputStream stream = Parser.fromString("(123 (World))");
+
+            if (!expectedString.equals(parser.parseExpression(stream).toString())) {
+                throw new RuntimeException("Parser.parseExpressionTest() failed. Result didn't match the expected string!");
+            }
+        } catch (LispException e) {
+            e.printStackTrace();
         }
     }
 }

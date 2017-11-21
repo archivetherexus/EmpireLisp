@@ -5,6 +5,6 @@ package EmpireLisp;
  * @date 11/20/17
  */
 public interface IApplyable {
-    Expression apply(Environment environment, Expression arguments);
+    Expression apply(Environment environment, Expression arguments) throws LispException;
     boolean isLazyEval();
 }

@@ -27,7 +27,7 @@ public class ExpressionPair extends Expression {
     }
 
     @Override
-    public Expression eval(Environment environment) {
+    public Expression eval(Environment environment) throws LispException {
         if (this.right instanceof ExpressionPair) {
             Expression fun = this.left.eval(environment);
             ExpressionPair result;
@@ -55,8 +55,7 @@ public class ExpressionPair extends Expression {
                 return ((IApplyable)fun).apply(environment, result);
             }
             else {
-                System.out.println("ERROR: List is not applyable"); // TODO: Throw error.
-                return null;
+                throw new LispException(LispException.ErrorType.NOT_APPLICABLE,"List is not applicable");
             }
         }
         else {

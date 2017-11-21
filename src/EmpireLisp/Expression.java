@@ -6,5 +6,5 @@ package EmpireLisp;
  */
 public abstract class Expression {
     public abstract String toString();
-    public abstract Expression eval(Environment environment);
+    public abstract Expression eval(Environment environment) throws LispException;
 }
