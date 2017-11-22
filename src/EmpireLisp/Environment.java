@@ -39,29 +39,9 @@ public class Environment {
     public static Environment makeStandardEnvironment() {
         Environment environment = new Environment(null);
 
-        environment.setVariable("lambda", new ExpressionPrimitive() {
-            @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof  ExpressionPair && firstPair.right instanceof ExpressionPair) {
-                        ExpressionPair argumentList = (ExpressionPair) firstPair.left;
-                        ExpressionPair bodyList = (ExpressionPair) firstPair.right;
-                        return new ExpressionLambda(environment, argumentList, bodyList);
-                    }
-                }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
-            }
-
-            @Override
-            public boolean isLazyEval() {
-                return true;
-            }
-        });
         environment.setVariable("+", new ExpressionPrimitive() {
             @Override
-            public Expression apply(Environment environment,Expression arguments) throws LispException {
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
 
@@ -76,10 +56,21 @@ public class Environment {
 
                                 return new ExpressionNumber(valueA.number + valueB.number);
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -87,6 +78,7 @@ public class Environment {
                 return false;
             }
         });
+
         environment.setVariable("-", new ExpressionPrimitive() {
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
@@ -104,10 +96,21 @@ public class Environment {
 
                                 return new ExpressionNumber(valueA.number - valueB.number);
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -133,10 +136,21 @@ public class Environment {
 
                                 return new ExpressionNumber(valueA.number * valueB.number);
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -162,10 +176,21 @@ public class Environment {
 
                                 return new ExpressionNumber(valueA.number / valueB.number);
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -191,10 +216,21 @@ public class Environment {
 
                                 return new ExpressionNumber(valueA.number % valueB.number);
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -220,10 +256,21 @@ public class Environment {
 
                                 return valueA.number > valueB.number ? trueValue : falseValue;
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -249,10 +296,21 @@ public class Environment {
 
                                 return valueA.number >= valueB.number ? trueValue : falseValue;
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -278,10 +336,21 @@ public class Environment {
 
                                 return valueA.number < valueB.number ? trueValue : falseValue;
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -290,7 +359,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("<=", new ExpressionPrimitive() {
+        environment.setVariable(">=", new ExpressionPrimitive() {
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
@@ -307,10 +376,21 @@ public class Environment {
 
                                 return valueA.number <= valueB.number ? trueValue : falseValue;
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
@@ -336,15 +416,68 @@ public class Environment {
 
                                 return valueA.number == valueB.number ? trueValue : falseValue;
                             }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
+                    }
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
             public boolean isLazyEval() {
                 return false;
+            }
+        });
+
+        environment.setVariable("lambda", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+
+                    if (firstPair.left instanceof  ExpressionPair && firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair argumentList = (ExpressionPair) firstPair.left;
+                        ExpressionPair bodyList = (ExpressionPair) firstPair.right;
+                        return new ExpressionLambda(environment, argumentList, bodyList);
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
+        environment.setVariable("cons", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.right instanceof  ExpressionPair) {
+                        return new ExpressionPair(firstPair.left.eval(environment), firstPair.right.eval(environment));
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
             }
         });
 
@@ -381,11 +514,44 @@ public class Environment {
                         return ((ExpressionPair)defaultCondition.right).left.eval(environment);
                     }
                     else {
-                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Bad list!"); // TODO: Use better name!
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                     }
-
                 }
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH);
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
+        environment.setVariable("define", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+
+                    if (firstPair.left instanceof ExpressionSymbol) {
+                        ExpressionSymbol symbol = (ExpressionSymbol) firstPair.left;
+                        if (firstPair.right instanceof ExpressionPair) {
+                            Expression value = ((ExpressionPair)firstPair.right).left.eval(environment);
+                            environment.setVariable(symbol.symbol, value);
+                            return value;
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                        }
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, "Define can only use symbols as keys.");
+                    }
+                }
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
 
             @Override
