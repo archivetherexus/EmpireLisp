@@ -7,4 +7,8 @@ package EmpireLisp;
 public abstract class Expression {
     public abstract String toString();
     public abstract Expression eval(Environment environment) throws LispException;
+
+    public boolean isTrue() {
+        return this instanceof ExpressionNumber && ((ExpressionNumber)this).number == 1;
+    }
 }

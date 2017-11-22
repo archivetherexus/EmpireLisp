@@ -7,7 +7,9 @@ package EmpireLisp;
 public class LispException extends Exception {
     public static class ErrorMessages {
         public static String ARGUMENTS_MUST_BE_IN_LIST = "Function arguments must be in a valid list.";
-        public static String EXPECTED_NUMBER = "Expected number but got:";
+        public static String expectedType(String type, String got) {
+            return "Expected " + type + " but got: " + got;
+        }
     }
 
     enum ErrorType {

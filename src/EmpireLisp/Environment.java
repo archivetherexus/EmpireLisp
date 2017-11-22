@@ -10,8 +10,8 @@ import java.util.Map;
  */
 public class Environment {
 
-    static Expression trueValue = new ExpressionNumber(1);
-    static Expression falseValue = new ExpressionPair(null, null);
+    public static Expression trueValue = new ExpressionNumber(1);
+    public static Expression falseValue = new ExpressionPair(null, null);
     static Expression nilValue = falseValue;
 
     Map<String, Expression> map = new HashMap<>();
@@ -39,403 +39,188 @@ public class Environment {
     public static Environment makeStandardEnvironment() {
         Environment environment = new Environment(null);
 
-        environment.setVariable("+", new ExpressionPrimitive() {
+        environment.setVariable("true", trueValue);
+        environment.setVariable("else", trueValue);
+        environment.setVariable("false", falseValue);
+
+
+        environment.setVariable("+", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number + valueB.number);
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return new ExpressionNumber(arg1.number + arg2.number);
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable("-", new ExpressionPrimitive() {
+        environment.setVariable("-", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number - valueB.number);
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return new ExpressionNumber(arg1.number - arg2.number);
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable("*", new ExpressionPrimitive() {
+        environment.setVariable("*", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number * valueB.number);
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return new ExpressionNumber(arg1.number * arg2.number);
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable("/", new ExpressionPrimitive() {
+        environment.setVariable("/", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number / valueB.number);
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return new ExpressionNumber(arg1.number / arg2.number);
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable("remainder", new ExpressionPrimitive() {
+        environment.setVariable("remainder", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return new ExpressionNumber(valueA.number % valueB.number);
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return new ExpressionNumber(arg1.number % arg2.number);
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable(">", new ExpressionPrimitive() {
+        environment.setVariable("=", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return valueA.number > valueB.number ? trueValue : falseValue;
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return arg1.number == arg2.number ? Environment.trueValue : Environment.falseValue;
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable(">=", new ExpressionPrimitive() {
+        environment.setVariable(">", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return valueA.number >= valueB.number ? trueValue : falseValue;
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return arg1.number > arg2.number ? Environment.trueValue : Environment.falseValue;
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable("<", new ExpressionPrimitive() {
+        environment.setVariable(">=", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return valueA.number < valueB.number ? trueValue : falseValue;
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return arg1.number >= arg2.number ? Environment.trueValue : Environment.falseValue;
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable(">=", new ExpressionPrimitive() {
+        environment.setVariable("<", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return valueA.number <= valueB.number ? trueValue : falseValue;
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return arg1.number < arg2.number ? Environment.trueValue : Environment.falseValue;
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
-        environment.setVariable("=", new ExpressionPrimitive() {
+        environment.setVariable("<=", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
             @Override
-            public Expression apply(Environment environment, Expression arguments) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-
-                    if (firstPair.left instanceof ExpressionNumber) {
-                        ExpressionNumber valueA = (ExpressionNumber) firstPair.left;
-
-                        if (firstPair.right instanceof ExpressionPair) {
-                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-
-                                return valueA.number == valueB.number ? trueValue : falseValue;
-                            }
-                            else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + secondPair.left.toString());
-                            }
-                        }
-                        else {
-                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                        }
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.EXPECTED_NUMBER + " " + firstPair.left.toString());
-                    }
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+            public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
+                return arg1.number <= arg2.number ? Environment.trueValue : Environment.falseValue;
             }
 
             @Override
-            public boolean isLazyEval() {
-                return false;
+            public String getType1Name() {
+                return "number";
+            }
+
+            @Override
+            public String getType2Name() {
+                return "number";
             }
         });
 
@@ -460,13 +245,34 @@ public class Environment {
             }
         });
 
+        environment.setVariable("quote", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.left instanceof ExpressionPair) {
+                        return (ExpressionPair) firstPair.left;
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
         environment.setVariable("cons", new ExpressionPrimitive() {
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof  ExpressionPair) {
-                        return new ExpressionPair(firstPair.left.eval(environment), firstPair.right.eval(environment));
+                        return new ExpressionPair(firstPair.left.eval(environment), ((ExpressionPair) firstPair.right).left.eval(environment));
                     }
                     else {
                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
@@ -481,6 +287,48 @@ public class Environment {
             }
         });
 
+        environment.setVariable("car", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.left instanceof ExpressionPair) {
+                        return ((ExpressionPair) firstPair.left).left;
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return false;
+            }
+        });
+
+        environment.setVariable("cdr", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.left instanceof ExpressionPair) {
+                        return ((ExpressionPair) firstPair.left).right;
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return false;
+            }
+        });
+
         environment.setVariable("cond", new ExpressionPrimitive() {
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
@@ -492,12 +340,12 @@ public class Environment {
                     for (Expression uncheckedCondition : conditions) {
                         if (uncheckedCondition instanceof ExpressionPair) {
                             ExpressionPair condition = (ExpressionPair) uncheckedCondition;
-                            if (condition.left.eval(environment) == trueValue /*TODO: Use better check. */) {
+                            if (condition.left.eval(environment).isTrue()) {
                                 if (condition.right instanceof ExpressionPair) {
                                     return ((ExpressionPair)condition.right).left.eval(environment);
                                 }
                                 else {
-                                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Bad list!"); // TODO: Use better name!
+                                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                                 }
                             }
                         }
@@ -507,15 +355,7 @@ public class Environment {
                     }
 
                     // No condition matched. Use the last condition as an else. //
-
-                    // All elements have already been checked for arity. //
-                    ExpressionPair defaultCondition = (ExpressionPair) conditions.get(conditions.size() - 1);
-                    if (defaultCondition.right instanceof ExpressionPair){
-                        return ((ExpressionPair)defaultCondition.right).left.eval(environment);
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                    }
+                    return new ExpressionPair(null, null); // TODO: What to do?
                 }
                 else {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
