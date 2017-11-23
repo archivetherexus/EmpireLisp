@@ -4,6 +4,7 @@ package EmpireLisp;
  * @author Tyrerexus
  * @date 11/22/17
  */
+@SuppressWarnings("JavaDoc")
 public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends Expression> extends ExpressionPrimitive {
     private Class<T1> type1;
     private Class<T2> type2;
@@ -42,7 +43,7 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
                 }
             }
             else {
-                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType(getType2Name(), firstPair.left.toString()));
+                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType(getType1Name(), firstPair.left.toString()));
             }
         }
         else {

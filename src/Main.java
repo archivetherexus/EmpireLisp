@@ -7,6 +7,7 @@ import java.util.Scanner;
  * @author Tyrerexus
  * @date 11/20/17
  */
+@SuppressWarnings("JavaDoc")
 public class Main {
 
     public static void main(String[] args) throws UnsupportedEncodingException {

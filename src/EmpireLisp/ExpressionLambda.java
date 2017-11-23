@@ -8,12 +8,14 @@ import java.util.List;
  * @author Tyrerexus
  * @date 11/20/17
  */
-public class ExpressionLambda extends Expression implements IApplyable {
+@SuppressWarnings("JavaDoc")
+public class ExpressionLambda extends Expression implements IApplicable {
 
-    List<String> arguments;
-    List<Expression> body;
-    Environment environment;
+    private List<String> arguments;
+    private List<Expression> body;
+    private Environment environment;
 
+    @SuppressWarnings("WeakerAccess")
     public ExpressionLambda(Environment environment, ExpressionPair argumentList, ExpressionPair bodyList) throws LispException {
         this.environment = new Environment(environment);
         this.body = bodyList.toList();

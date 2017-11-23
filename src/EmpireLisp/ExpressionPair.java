@@ -7,10 +7,15 @@ import java.util.List;
  * @author Tyrerexus
  * @date 11/20/17
  */
+@SuppressWarnings("JavaDoc")
 public class ExpressionPair extends Expression {
+    @SuppressWarnings("WeakerAccess")
     public Expression left;
+
+    @SuppressWarnings("WeakerAccess")
     public Expression right;
 
+    @SuppressWarnings("WeakerAccess")
     public ExpressionPair(Expression left, Expression right) {
         this.left = left;
         this.right = right;
@@ -31,8 +36,8 @@ public class ExpressionPair extends Expression {
         if (this.right instanceof ExpressionPair) {
             Expression fun = this.left.eval(environment);
             ExpressionPair result;
-            if (fun instanceof IApplyable) {
-                if (!((IApplyable)fun).isLazyEval()) {
+            if (fun instanceof IApplicable) {
+                if (!((IApplicable)fun).isLazyEval()) {
                     ExpressionPair list = (ExpressionPair) this.right;
                     result = new ExpressionPair(null, null);
                     ExpressionPair head = result;
@@ -52,7 +57,7 @@ public class ExpressionPair extends Expression {
                     result = (ExpressionPair) this.right;
                 }
 
-                return ((IApplyable)fun).apply(environment, result);
+                return ((IApplicable)fun).apply(environment, result);
             }
             else {
                 throw new LispException(LispException.ErrorType.NOT_APPLICABLE,"List is not applicable");
@@ -63,8 +68,9 @@ public class ExpressionPair extends Expression {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public List<Expression> toList() {
-        List<Expression> result = new ArrayList<Expression>();
+        List<Expression> result = new ArrayList<>();
         ExpressionPair list = this;
         while(list.left != null) {
             result.add(list.left);

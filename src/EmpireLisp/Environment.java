@@ -8,19 +8,29 @@ import java.util.Map;
  * @author Tyrerexus
  * @date 11/20/17
  */
+@SuppressWarnings("JavaDoc")
 public class Environment {
 
+
+    @SuppressWarnings("WeakerAccess")
     public static Expression trueValue = new ExpressionNumber(1);
+
+    @SuppressWarnings("WeakerAccess")
     public static Expression falseValue = new ExpressionPair(null, null);
-    static Expression nilValue = falseValue;
 
-    Map<String, Expression> map = new HashMap<>();
-    Environment parent;
+    @SuppressWarnings("WeakerAccess")
+    public static Expression nilValue = falseValue;
 
+    private Map<String, Expression> map = new HashMap<>();
+
+    private Environment parent;
+
+    @SuppressWarnings("WeakerAccess")
     public Environment(Environment parent) {
         this.parent = parent;
-    };
+    }
 
+    @SuppressWarnings("WeakerAccess")
     public Expression getVariable(String name) throws LispException {
         Expression result = map.get(name);
         if (result != null) {
@@ -250,12 +260,7 @@ public class Environment {
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
-                    if (firstPair.left instanceof ExpressionPair) {
-                        return (ExpressionPair) firstPair.left;
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
-                    }
+                    return firstPair.left;
                 }
                 throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
             }
@@ -402,7 +407,8 @@ public class Environment {
 
         return environment;
     }
-
+    
+    @SuppressWarnings("WeakerAccess")
     public void setVariable(String name, Expression value) {
         map.put(name, value);
     }

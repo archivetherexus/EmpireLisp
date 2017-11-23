@@ -12,7 +12,9 @@ import java.util.Iterator;
  * @author Tyrerexus
  * @date 11/20/17
  */
+@SuppressWarnings("JavaDoc")
 public class Parser {
+    @SuppressWarnings("WeakerAccess")
     public String readToken(PushbackInputStream stream) {
         try {
             int character = stream.read();
@@ -92,7 +94,7 @@ public class Parser {
 
     private static void readTokenTestList(String testString, ArrayList<String> expectedList) {
 
-        ArrayList<String> resultList = new ArrayList<String>();
+        ArrayList<String> resultList = new ArrayList<>();
         Parser parser = new Parser();
         PushbackInputStream stream = fromString(testString);
         String str = parser.readToken(stream);
