@@ -20,7 +20,8 @@ public class LispException extends Exception {
         PARSE_ERROR ("Parse error"),
         UNBOUND_VARIABLE ("Unbound variable"),
         INVALID_ARGUMENTS("Invalid arguments"),
-        NOT_APPLICABLE("Not applicable");
+        NOT_APPLICABLE("Not applicable"),
+        UNIT_TEST_FAILURE("Unit test failure");
 
         private String name;
 

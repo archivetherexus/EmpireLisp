@@ -1,5 +1,9 @@
 package EmpireLisp;
 
+import java.io.ByteArrayInputStream;
+import java.io.PushbackInputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +39,10 @@ public class Environment {
         Expression result = map.get(name);
         if (result != null) {
             return result;
-        }
-        else {
+        } else {
             if (parent != null) {
                 return parent.getVariable(name);
-            }
-            else {
+            } else {
                 throw new LispException(LispException.ErrorType.UNBOUND_VARIABLE, name);
             }
         }
@@ -53,8 +55,20 @@ public class Environment {
         environment.setVariable("else", trueValue);
         environment.setVariable("false", falseValue);
 
+        abstract class SafeProcedureBinaryOperator<T1 extends Expression, T2 extends Expression> extends ProcedureBinaryOperator<T1, T2> implements IUnitTestable {
+            SafeProcedureBinaryOperator(Class<T1> type1, Class<T2> type2) {
+                super(type1, type2);
+            }
+        }
 
-        environment.setVariable("+", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        abstract class SafeExpressionPrimitive extends ExpressionPrimitive implements IUnitTestable {
+        }
+
+        environment.setVariable("+", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(+ 20 20)", "40");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -72,7 +86,11 @@ public class Environment {
             }
         });
 
-        environment.setVariable("-", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("-", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(- 20 20)", "0");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -90,7 +108,11 @@ public class Environment {
             }
         });
 
-        environment.setVariable("*", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("*", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(* 20 20)", "400");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -108,7 +130,11 @@ public class Environment {
             }
         });
 
-        environment.setVariable("/", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("/", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(/ 20 20)", "1");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -126,7 +152,11 @@ public class Environment {
             }
         });
 
-        environment.setVariable("remainder", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("remainder", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(remainder 20 20)", "0");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -144,7 +174,12 @@ public class Environment {
             }
         });
 
-        environment.setVariable("=", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("=", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(= 2 2)", "true") &&
+                        environment.evalTest("(= 2 1)", "false");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -162,7 +197,13 @@ public class Environment {
             }
         });
 
-        environment.setVariable(">", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable(">", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(> 2 2)", "false") &&
+                        environment.evalTest("(> 2 1)", "true") &&
+                        environment.evalTest("(> 1 2)", "false");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -180,7 +221,13 @@ public class Environment {
             }
         });
 
-        environment.setVariable(">=", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable(">=", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(>= 2 2)", "true") &&
+                        environment.evalTest("(>= 2 1)", "true") &&
+                        environment.evalTest("(>= 1 2)", "false");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -198,7 +245,13 @@ public class Environment {
             }
         });
 
-        environment.setVariable("<", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("<", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(< 2 2)", "false") &&
+                        environment.evalTest("(< 2 1)", "false") &&
+                        environment.evalTest("(< 1 2)", "true");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -216,7 +269,13 @@ public class Environment {
             }
         });
 
-        environment.setVariable("<=", new ProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("<=", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(<= 2 2)", "true") &&
+                        environment.evalTest("(<= 2 1)", "false") &&
+                        environment.evalTest("(<= 1 2)", "true");
+            }
 
             @Override
             public Expression operate(ExpressionNumber arg1, ExpressionNumber arg2) {
@@ -234,13 +293,18 @@ public class Environment {
             }
         });
 
-        environment.setVariable("lambda", new ExpressionPrimitive() {
+        environment.setVariable("lambda", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("((lambda (x) x) 4)", "4");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
 
-                    if (firstPair.left instanceof  ExpressionPair && firstPair.right instanceof ExpressionPair) {
+                    if (firstPair.left instanceof ExpressionPair && firstPair.right instanceof ExpressionPair) {
                         ExpressionPair argumentList = (ExpressionPair) firstPair.left;
                         ExpressionPair bodyList = (ExpressionPair) firstPair.right;
                         return new ExpressionLambda(environment, argumentList, bodyList);
@@ -255,7 +319,12 @@ public class Environment {
             }
         });
 
-        environment.setVariable("quote", new ExpressionPrimitive() {
+        environment.setVariable("quote", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(quote hello!)", "(quote hello!)");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
@@ -271,15 +340,19 @@ public class Environment {
             }
         });
 
-        environment.setVariable("cons", new ExpressionPrimitive() {
+        environment.setVariable("cons", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(cons 1 2)", "(cons 1 2)");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
-                    if (firstPair.right instanceof  ExpressionPair) {
+                    if (firstPair.right instanceof ExpressionPair) {
                         return new ExpressionPair(firstPair.left.eval(environment), ((ExpressionPair) firstPair.right).left.eval(environment));
-                    }
-                    else {
+                    } else {
                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                     }
                 }
@@ -292,15 +365,19 @@ public class Environment {
             }
         });
 
-        environment.setVariable("car", new ExpressionPrimitive() {
+        environment.setVariable("car", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(car (cons 1 2))", "1");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.left instanceof ExpressionPair) {
                         return ((ExpressionPair) firstPair.left).left;
-                    }
-                    else {
+                    } else {
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
                     }
                 }
@@ -313,15 +390,19 @@ public class Environment {
             }
         });
 
-        environment.setVariable("cdr", new ExpressionPrimitive() {
+        environment.setVariable("cdr", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(cdr (cons 1 2))", "2");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.left instanceof ExpressionPair) {
                         return ((ExpressionPair) firstPair.left).right;
-                    }
-                    else {
+                    } else {
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
                     }
                 }
@@ -334,7 +415,59 @@ public class Environment {
             }
         });
 
-        environment.setVariable("cond", new ExpressionPrimitive() {
+        environment.setVariable("if", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(if false 14 (+ 21 21))", "42") &&
+                        environment.evalTest("(if true 14 (+ 21 21))", "14") &&
+                        environment.evalTest("(if true (+ 7 7) 42)", "14");
+            }
+
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+
+                        if (secondPair.right instanceof ExpressionPair) {
+                            ExpressionPair thirdPair = (ExpressionPair) secondPair.right;
+
+                            Expression testExpression = firstPair.left;
+                            Expression thenExpression = secondPair.left;
+                            Expression elseExpression = thirdPair.left;
+
+                            if (testExpression.eval(environment).isTrue()) {
+                                return thenExpression.eval(environment);
+                            } else {
+                                return elseExpression.eval(environment);
+                            }
+                        } else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                        }
+                    } else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                } else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
+        environment.setVariable("cond", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(cond ((= 1 0) 32) (else 64))", "64") &&
+                        environment.evalTest("(cond ((= 1 1) 32) (else 64))", "32") &&
+                        environment.evalTest("(cond ((= 9 1) 99) ((= 1 1) 32) (else 64))", "32");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
@@ -347,22 +480,19 @@ public class Environment {
                             ExpressionPair condition = (ExpressionPair) uncheckedCondition;
                             if (condition.left.eval(environment).isTrue()) {
                                 if (condition.right instanceof ExpressionPair) {
-                                    return ((ExpressionPair)condition.right).left.eval(environment);
-                                }
-                                else {
+                                    return ((ExpressionPair) condition.right).left.eval(environment);
+                                } else {
                                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                                 }
                             }
-                        }
-                        else {
+                        } else {
                             throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, "Conditions can only be lists!");
                         }
                     }
 
                     // No condition matched. Use the last condition as an else. //
-                    return new ExpressionPair(null, null); // TODO: What to do?
-                }
-                else {
+                    return nilValue; // TODO: What to do?
+                } else {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                 }
             }
@@ -373,7 +503,13 @@ public class Environment {
             }
         });
 
-        environment.setVariable("define", new ExpressionPrimitive() {
+        environment.setVariable("define", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(define x (+ 7 7))", "14") &&
+                        environment.evalTest("((lambda () (define x 6) (+ 2 x)))", "8");
+            }
+
             @Override
             public Expression apply(Environment environment, Expression arguments) throws LispException {
                 if (arguments instanceof ExpressionPair) {
@@ -382,19 +518,16 @@ public class Environment {
                     if (firstPair.left instanceof ExpressionSymbol) {
                         ExpressionSymbol symbol = (ExpressionSymbol) firstPair.left;
                         if (firstPair.right instanceof ExpressionPair) {
-                            Expression value = ((ExpressionPair)firstPair.right).left.eval(environment);
+                            Expression value = ((ExpressionPair) firstPair.right).left.eval(environment);
                             environment.setVariable(symbol.symbol, value);
                             return value;
-                        }
-                        else {
+                        } else {
                             throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
-                    }
-                    else {
+                    } else {
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, "Define can only use symbols as keys.");
                     }
-                }
-                else {
+                } else {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                 }
             }
@@ -407,9 +540,38 @@ public class Environment {
 
         return environment;
     }
-    
+
     @SuppressWarnings("WeakerAccess")
     public void setVariable(String name, Expression value) {
         map.put(name, value);
+    }
+
+    private boolean evalTest(String what, String expect) {
+        try {
+            String charset = StandardCharsets.UTF_8.name();
+            Parser parser = new Parser();
+            Environment environment = new Environment(this);
+            PushbackInputStream stream1 = new PushbackInputStream(new ByteArrayInputStream(what.getBytes(charset)));
+            PushbackInputStream stream2 = new PushbackInputStream(new ByteArrayInputStream(expect.getBytes(charset)));
+
+            Expression expression1 = parser.parseExpression(stream1).eval(environment);
+            Expression expression2 = parser.parseExpression(stream2).eval(environment);
+
+            return expression1.equals(expression2);
+        } catch (UnsupportedEncodingException | LispException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    static public void standardEnvironmentTest() throws LispException {
+        Environment standardEnvironment = makeStandardEnvironment();
+        for (Map.Entry<String, Expression> values : standardEnvironment.map.entrySet()) {
+            if (values.getValue() instanceof IUnitTestable) {
+                if (!((IUnitTestable) values.getValue()).selfTest(standardEnvironment)) {
+                    throw new LispException(LispException.ErrorType.UNIT_TEST_FAILURE, values.getKey());
+                }
+            }
+        }
     }
 }

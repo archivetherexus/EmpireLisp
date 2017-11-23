@@ -45,6 +45,11 @@ public class ExpressionLambda extends Expression implements IApplicable {
     }
 
     @Override
+    public boolean equals(Expression other) {
+        return this == other; // TODO: Is this right?
+    }
+
+    @Override
     public Expression eval(Environment environment) {
         return this;
     }

@@ -10,9 +10,11 @@ import java.util.Scanner;
 @SuppressWarnings("JavaDoc")
 public class Main {
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
+    public static void main(String[] args) throws UnsupportedEncodingException, LispException {
         Parser.readTokenTest();
         Parser.parseExpressionTest();
+        Environment.standardEnvironmentTest();
+
         Scanner scanner = new Scanner(System.in);
 
         Parser parser = new Parser();

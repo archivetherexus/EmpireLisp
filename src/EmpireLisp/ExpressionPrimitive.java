@@ -15,4 +15,9 @@ public abstract class ExpressionPrimitive extends Expression implements IApplica
     public Expression eval(Environment environment) {
         return this;
     }
+
+    @Override
+    public boolean equals(Expression other) {
+        return other == this;
+    }
 }

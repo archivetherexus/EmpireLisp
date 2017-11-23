@@ -21,6 +21,17 @@ public class ExpressionNumber extends Expression {
     }
 
     @Override
+    public boolean equals(Expression other) {
+        if (other instanceof ExpressionNumber) {
+            ExpressionNumber otherNumber = (ExpressionNumber) other;
+            return otherNumber.number == this.number;
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
     public Expression eval(Environment environment) {
         return this;
     }

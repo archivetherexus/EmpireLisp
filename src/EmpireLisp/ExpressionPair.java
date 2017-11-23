@@ -32,6 +32,28 @@ public class ExpressionPair extends Expression {
     }
 
     @Override
+    public boolean equals(Expression other) {
+        if (other instanceof ExpressionPair) {
+            ExpressionPair otherPair = (ExpressionPair) other;
+            if (this.left == null && this.right == null) {
+                return otherPair.left == null && otherPair.right == null;
+            }
+            else if (this.left == null) {
+                return otherPair.left == null && this.right.equals(otherPair.right);
+            }
+            else if (this.right == null) {
+                return this.left.equals(otherPair.left) && otherPair.right == null;
+            }
+            else {
+                return this.left.equals(otherPair.left) && this.right.equals(otherPair.right);
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
     public Expression eval(Environment environment) throws LispException {
         if (this.right instanceof ExpressionPair) {
             Expression fun = this.left.eval(environment);

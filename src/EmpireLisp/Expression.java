@@ -7,6 +7,7 @@ package EmpireLisp;
 @SuppressWarnings("JavaDoc")
 public abstract class Expression {
     public abstract String toString();
+    public abstract boolean equals(Expression other);
     public abstract Expression eval(Environment environment) throws LispException;
 
     @SuppressWarnings("WeakerAccess")

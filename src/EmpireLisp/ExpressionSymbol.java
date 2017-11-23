@@ -21,6 +21,18 @@ public class ExpressionSymbol extends Expression {
     }
 
     @Override
+    public boolean equals(Expression other) {
+        if (other instanceof ExpressionSymbol) {
+            ExpressionSymbol otherSymbol = (ExpressionSymbol) other;
+
+            return otherSymbol.symbol.equals(this.symbol);
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
     public Expression eval(Environment environment) throws LispException {
         return environment.getVariable(symbol);
     }
