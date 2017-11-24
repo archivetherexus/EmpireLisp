@@ -12,7 +12,7 @@ public class ExpressionSymbol extends Expression {
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionSymbol(String symbol) {
-        this.symbol = symbol;
+        this.symbol = symbol.toLowerCase();
     }
 
     @Override

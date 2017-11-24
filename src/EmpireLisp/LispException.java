@@ -15,7 +15,7 @@ public class LispException extends Exception {
         }
     }
 
-    enum ErrorType {
+    public enum ErrorType {
         ARITY_MISS_MATCH ("Arity miss-match"),
         PARSE_ERROR ("Parse error"),
         UNBOUND_VARIABLE ("Unbound variable"),

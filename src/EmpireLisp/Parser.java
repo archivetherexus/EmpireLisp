@@ -14,11 +14,14 @@ import java.util.Iterator;
  */
 @SuppressWarnings("JavaDoc")
 public class Parser {
+
+    int parenthesesCount = 0;
+
     @SuppressWarnings("WeakerAccess")
-    public String readToken(PushbackInputStream stream) {
+    public String readToken(PushbackInputStream stream) throws LispException {
         try {
             int character = stream.read();
-            if (character != -1) {
+            if (character != 255 && character != -1) {
                 while (Character.isWhitespace(character)) {
                     character = stream.read();
                 }
@@ -29,12 +32,31 @@ public class Parser {
                 else if (character == ')') {
                     return ")";
                 }
+                else if (character == '"') {
+                    StringBuilder builder = new StringBuilder();
+                    builder.append((char)character);
+                    character = stream.read();
+                    while (character != '"') {
+                        if (character == '\'') {
+                            character = stream.read();
+                            builder.append((char) character);
+                        }
+                        else if (character == 255 || character == -1) {
+                            throw new LispException(LispException.ErrorType.PARSE_ERROR, "Unterminated string!");
+                        }
+                        else {
+                            builder.append((char) character);
+                        }
+                        character = stream.read();
+                    }
+                    return builder.toString();
+                }
 
                 StringBuilder builder = new StringBuilder();
                 builder.append((char)character);
 
                 character = stream.read();
-                while (character != -1 && !Character.isWhitespace(character) && character != '(' && character != ')') {
+                while (character != 255 && character != -1 && !Character.isWhitespace(character) && character != '(' && character != ')') {
                     builder.append((char)character);
                     character = stream.read();
                 }
@@ -56,10 +78,11 @@ public class Parser {
         String token = readToken(stream);
 
         if (token == null) {
-            throw new LispException(LispException.ErrorType.PARSE_ERROR, "Possibly unmatched parenthesis!");
+            throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing right-angel parentheses!");
         }
 
         else if (token.equals("(")) {
+            parenthesesCount++;
             result = new ExpressionPair(null, null);
             ExpressionPair head = (ExpressionPair) result;
             Expression expression = parseExpression(stream);
@@ -71,7 +94,16 @@ public class Parser {
             }
         }
         else if (token.equals(")")) {
-            return null;
+            if (parenthesesCount > 0) {
+                parenthesesCount--;
+                return null;
+            }
+            else {
+                throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing left-angel parentheses!");
+            }
+        }
+        else if (token.charAt(0) == '\"') {
+            return new ExpressionString(token.substring(1));
         }
         else {
             try {
@@ -92,7 +124,7 @@ public class Parser {
         }
     }
 
-    private static void readTokenTestList(String testString, ArrayList<String> expectedList) {
+    private static void readTokenTestList(String testString, ArrayList<String> expectedList) throws LispException {
 
         ArrayList<String> resultList = new ArrayList<>();
         Parser parser = new Parser();
@@ -118,19 +150,19 @@ public class Parser {
         }
 
         if (!equal) {
-            throw new RuntimeException("Parser.readTokenTest() failed. Lists are not equal!");
+            throw new LispException(LispException.ErrorType.UNIT_TEST_FAILURE, "Parser.readTokenTest() failed. Lists are not equal!");
         }
     }
 
-    public static void readTokenTest() {
-        readTokenTestList("(hello world (how are you))", new ArrayList<String>(){{
+    public static void readTokenTest() throws LispException {
+        readTokenTestList("(hello world (how are you?))", new ArrayList<String>(){{
             add("(");
             add("hello");
             add("world");
             add("(");
             add("how");
             add("are");
-            add("you");
+            add("you?");
             add(")");
             add(")");
         }});
@@ -146,16 +178,23 @@ public class Parser {
             add(")");
             add(")");
         }});
+
+        readTokenTestList("( \"Hello () World!\" 123)", new ArrayList<String>(){{
+            add("(");
+            add("\"Hello () World!");
+            add("123");
+            add(")");
+        }});
     }
 
     public static void parseExpressionTest() {
         try {
-            String expectedString = "(123.0 . ((World . ()) . ()))";
+            String expectedString = "(123.0 . ((world . ()) . ()))";
             Parser parser = new Parser();
-            PushbackInputStream stream = Parser.fromString("(123 (World))");
+            PushbackInputStream stream = Parser.fromString("(123 (WoRlD))");
 
             if (!expectedString.equals(parser.parseExpression(stream).toString())) {
-                throw new RuntimeException("Parser.parseExpressionTest() failed. Result didn't match the expected string!");
+                throw new LispException(LispException.ErrorType.UNIT_TEST_FAILURE, "Parser.parseExpressionTest() failed. Result didn't match the expected string!");
             }
         } catch (LispException e) {
             e.printStackTrace();

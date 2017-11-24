@@ -10,30 +10,73 @@ import java.util.Scanner;
 @SuppressWarnings("JavaDoc")
 public class Main {
 
+    static boolean running = true;
+
     public static void main(String[] args) throws UnsupportedEncodingException, LispException {
+
+
         Parser.readTokenTest();
         Parser.parseExpressionTest();
         Environment.standardEnvironmentTest();
 
         Scanner scanner = new Scanner(System.in);
 
+
         Parser parser = new Parser();
         Environment environment = Environment.makeStandardEnvironment();
+        environment.setVariable("print", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.left instanceof ExpressionString) {
+                        ExpressionString valueA = (ExpressionString) firstPair.left;
+                        System.out.println(valueA.string);
+                        return Environment.nilValue;
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("string", firstPair.left.toString()));
+                    }
+                }
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
 
-        //Expression expression = parser.parseExpression(Parser.fromString("(- ( + 2 ( + 4 4 )) 1)"));
-        /*Expression expression = parser.parseExpression(Parser.fromString("((lambda (x y) 33 (+ x y)) 42 8)"));
-        Expression expression2 = parser.parseExpression(Parser.fromString("(+ (lambda (x) 1) 1)"));*/
+            @Override
+            public boolean isLazyEval() {
+                return false;
+            }
+        });
 
-        while (true) {
+        environment.setVariable("exit", new ExpressionPrimitive() {
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                running = false;
+                return Environment.nilValue;
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return false;
+            }
+        });
+
+        while (running) {
             try {
                 System.out.print("> ");
                 Expression read = parser.parseExpression(Parser.fromString(scanner.nextLine()));
-                System.out.println("Read: " + read);
-                Expression result = read.eval(environment);
-                System.out.println(result);
+                if (read != null) {
+                    //System.out.println("Read: " + read);
+                    Expression result = read.eval(environment);
+                    System.out.println(result);
+                }
+                else {
+                    System.err.println("parseExpression() returned null!");
+                }
             }
             catch (LispException e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
     }

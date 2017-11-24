@@ -293,6 +293,35 @@ public class Environment {
             }
         });
 
+        environment.setVariable("eq", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(cons 1 2)", "(cons 1 2)");
+            }
+
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                        Expression valueA = firstPair.left;
+                        Expression valueB = secondPair.left;
+                        return valueA.equals(valueB) ? trueValue : falseValue;
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
         environment.setVariable("lambda", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
@@ -340,6 +369,112 @@ public class Environment {
             }
         });
 
+        environment.setVariable("length", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(length \"Hello\")", "5");
+            }
+
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+
+                    if (firstPair.left instanceof ISequence) {
+                        ISequence valueA = (ISequence) firstPair.left;
+                        return valueA.getLength();
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
+        environment.setVariable("at", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(at \"Hello\" 0)", "" + (int)'H');
+            }
+
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                        if (firstPair.left instanceof ISequence) {
+                            ISequence valueA = (ISequence) firstPair.left;
+                            if (secondPair.left instanceof ExpressionNumber) {
+                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
+                                return valueA.atIndex(valueB);
+                            }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", secondPair.left.toString()));
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
+                        }
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
+        environment.setVariable("concat", new SafeExpressionPrimitive() {
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(concat \"Hello\" \"World\")", "\"HelloWorld\"");
+            }
+
+            @Override
+            public Expression apply(Environment environment, Expression arguments) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                        if (firstPair.left instanceof ISequence) {
+                            ISequence valueA = (ISequence) firstPair.left;
+                            if (secondPair.left instanceof ISequence) {
+                                ISequence valueB = (ISequence) secondPair.left;
+                                return (Expression) valueA.concatenate(valueB); // TODO: Maybe there should be a check on the returned type here?
+                            }
+                            else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", secondPair.left.toString()));
+                            }
+                        }
+                        else {
+                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
+                        }
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                }
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            }
+
+            @Override
+            public boolean isLazyEval() {
+                return true;
+            }
+        });
+
         environment.setVariable("cons", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
@@ -352,7 +487,8 @@ public class Environment {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
                         return new ExpressionPair(firstPair.left.eval(environment), ((ExpressionPair) firstPair.right).left.eval(environment));
-                    } else {
+                    }
+                    else {
                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                     }
                 }
@@ -377,7 +513,8 @@ public class Environment {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.left instanceof ExpressionPair) {
                         return ((ExpressionPair) firstPair.left).left;
-                    } else {
+                    }
+                    else {
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
                     }
                 }
@@ -402,7 +539,8 @@ public class Environment {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.left instanceof ExpressionPair) {
                         return ((ExpressionPair) firstPair.left).right;
-                    } else {
+                    }
+                    else {
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("list", firstPair.left.toString()));
                     }
                 }
