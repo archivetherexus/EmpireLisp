@@ -21,7 +21,8 @@ public class LispException extends Exception {
         UNBOUND_VARIABLE ("Unbound variable"),
         INVALID_ARGUMENTS("Invalid arguments"),
         NOT_APPLICABLE("Not applicable"),
-        UNIT_TEST_FAILURE("Unit test failure");
+        UNIT_TEST_FAILURE("Unit test failure"),
+        INTERNAL_ERROR("Internal error");
 
         private String name;
 

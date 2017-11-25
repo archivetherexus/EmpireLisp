@@ -15,57 +15,60 @@ import java.util.Iterator;
 @SuppressWarnings("JavaDoc")
 public class Parser {
 
-    int parenthesesCount = 0;
+    private int parenthesesCount = 0;
 
     @SuppressWarnings("WeakerAccess")
     public String readToken(PushbackInputStream stream) throws LispException {
         try {
             int character = stream.read();
-            if (character != 255 && character != -1) {
-                while (Character.isWhitespace(character)) {
+
+            while (Character.isWhitespace(character)) {
+                character = stream.read();
+            }
+            if (character == ';') {
+                character = stream.read();
+                while (character != '\n' && character != -1 && character != 255) {
                     character = stream.read();
                 }
+                character = stream.read();
+            }
 
-                if (character == '(') {
-                    return "(";
-                }
-                else if (character == ')') {
-                    return ")";
-                }
-                else if (character == '"') {
-                    StringBuilder builder = new StringBuilder();
-                    builder.append((char)character);
-                    character = stream.read();
-                    while (character != '"') {
-                        if (character == '\'') {
-                            character = stream.read();
-                            builder.append((char) character);
-                        }
-                        else if (character == 255 || character == -1) {
-                            throw new LispException(LispException.ErrorType.PARSE_ERROR, "Unterminated string!");
-                        }
-                        else {
-                            builder.append((char) character);
-                        }
-                        character = stream.read();
-                    }
-                    return builder.toString();
-                }
-
+            if (character == 255 || character == -1) {
+                return null;
+            }
+            else if (character == '(') {
+                return "(";
+            } else if (character == ')') {
+                return ")";
+            } else if (character == '"') {
                 StringBuilder builder = new StringBuilder();
-                builder.append((char)character);
+                builder.append((char) character);
+                character = stream.read();
+                while (character != '"') {
+                    if (character == '\'') {
+                        character = stream.read();
+                        builder.append((char) character);
+                    } else if (character == 255 || character == -1) {
+                        throw new LispException(LispException.ErrorType.PARSE_ERROR, "Unterminated string!");
+                    } else {
+                        builder.append((char) character);
+                    }
+                    character = stream.read();
+                }
+                return builder.toString();
+            }
+            else {
+                StringBuilder builder = new StringBuilder();
+                builder.append((char) character);
 
                 character = stream.read();
                 while (character != 255 && character != -1 && !Character.isWhitespace(character) && character != '(' && character != ')') {
-                    builder.append((char)character);
+                    builder.append((char) character);
                     character = stream.read();
                 }
                 stream.unread(character);
 
                 return builder.toString();
-            }
-            else {
-                return null;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -135,17 +138,18 @@ public class Parser {
             str = parser.readToken(stream);
         }
 
-        Iterator<String> iter1 = resultList.iterator();
-        Iterator<String> iter2 = expectedList.iterator();
+        Iterator<String> iterator1 = resultList.iterator();
+        Iterator<String> iterator2 = expectedList.iterator();
         boolean equal = true;
-        while(iter1.hasNext() || iter2.hasNext()) {
-            if (iter1.hasNext() && iter2.hasNext()) {
-                if (!iter1.next().equals(iter2.next())) {
+        while(iterator1.hasNext() || iterator2.hasNext()) {
+            if (iterator1.hasNext() && iterator2.hasNext()) {
+                if (!iterator1.next().equals(iterator2.next())) {
                     equal = false;
                 }
             }
             else {
                 equal = false;
+                break;
             }
         }
 
@@ -184,6 +188,11 @@ public class Parser {
             add("\"Hello () World!");
             add("123");
             add(")");
+        }});
+        readTokenTestList("Hello World ; This is a comment\n!", new ArrayList<String>(){{
+            add("Hello");
+            add("World");
+            add("!");
         }});
     }
 

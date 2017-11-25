@@ -9,6 +9,7 @@ public class ExpressionString extends Expression implements ISequence {
 
     public String string;
 
+    @SuppressWarnings("WeakerAccess")
     public ExpressionString(String string) {
         this.string = string;
     }

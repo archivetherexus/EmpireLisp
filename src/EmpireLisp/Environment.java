@@ -452,7 +452,13 @@ public class Environment {
                             ISequence valueA = (ISequence) firstPair.left;
                             if (secondPair.left instanceof ISequence) {
                                 ISequence valueB = (ISequence) secondPair.left;
-                                return (Expression) valueA.concatenate(valueB); // TODO: Maybe there should be a check on the returned type here?
+                                ISequence result = valueA.concatenate(valueB);
+                                if (result instanceof Expression) {
+                                    return (Expression) result;
+                                }
+                                else {
+                                    throw new LispException(LispException.ErrorType.INTERNAL_ERROR);
+                                }
                             }
                             else {
                                 throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", secondPair.left.toString()));
