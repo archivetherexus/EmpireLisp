@@ -86,14 +86,23 @@ public class Parser {
 
         else if (token.equals("(")) {
             parenthesesCount++;
-            result = new ExpressionPair(null, null);
-            ExpressionPair head = (ExpressionPair) result;
             Expression expression = parseExpression(stream);
-            while (expression != null) {
-                head.left = expression;
-                head.right = new ExpressionPair(null, null);
-                head = (ExpressionPair) head.right;
-                expression = parseExpression(stream);
+            if (expression != null) {
+                result = new ExpressionPair(expression, Environment.nilValue);
+                ExpressionPair head = (ExpressionPair) result;
+                while (true) {
+                    Expression expression2 = parseExpression(stream);
+                    if (expression2 == null) {
+                        break;
+                    }
+                    else {
+                        head.right = new ExpressionPair(expression2, Environment.nilValue);
+                        head = (ExpressionPair) head.right;
+                    }
+                }
+            }
+            else {
+                return Environment.nilValue;
             }
         }
         else if (token.equals(")")) {
@@ -198,7 +207,7 @@ public class Parser {
 
     public static void parseExpressionTest() {
         try {
-            String expectedString = "(123.0 . ((world . ()) . ()))";
+            String expectedString = "(123.0 . ((world . nil) . nil))";
             Parser parser = new Parser();
             PushbackInputStream stream = Parser.fromString("(123 (WoRlD))");
 

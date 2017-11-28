@@ -15,8 +15,6 @@ public abstract class Expression {
         return this instanceof ExpressionNumber && ((ExpressionNumber)this).number == 1;
     }
     public boolean isNil() {
-        return this instanceof ExpressionPair &&
-            ((ExpressionPair)this).left == null &&
-            ((ExpressionPair)this).right == null;
+        return this instanceof ExpressionNil;
     }
 }

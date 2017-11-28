@@ -10,8 +10,9 @@ import java.util.Scanner;
 @SuppressWarnings("JavaDoc")
 public class Main {
 
-    static boolean running = true;
+    private static boolean running = true;
 
+    @SuppressWarnings("Convert2Lambda")
     public static void main(String[] args) throws UnsupportedEncodingException, LispException {
 
 
@@ -42,11 +43,6 @@ public class Main {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                 }
             }
-
-            @Override
-            public boolean isLazyEval() {
-                return false;
-            }
         });
 
         environment.setVariable("exit", new ExpressionPrimitive() {
@@ -54,11 +50,6 @@ public class Main {
             public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 running = false;
                 callback.evalCallback(Environment.nilValue);
-            }
-
-            @Override
-            public boolean isLazyEval() {
-                return false;
             }
         });
 

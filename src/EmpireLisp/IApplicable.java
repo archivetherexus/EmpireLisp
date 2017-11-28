@@ -7,5 +7,4 @@ package EmpireLisp;
 @SuppressWarnings("JavaDoc")
 public interface IApplicable {
     void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException;
-    boolean isLazyEval();
 }
