@@ -32,7 +32,7 @@ public class ExpressionNumber extends Expression {
     }
 
     @Override
-    public Expression eval(Environment environment) {
-        return this;
+    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+        callback.evalCallback(this);
     }
 }

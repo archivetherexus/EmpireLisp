@@ -8,10 +8,15 @@ package EmpireLisp;
 public abstract class Expression {
     public abstract String toString();
     public abstract boolean equals(Expression other);
-    public abstract Expression eval(Environment environment) throws LispException;
+    public abstract void eval(Environment environment, IEvalCallback callback) throws LispException;
 
     @SuppressWarnings("WeakerAccess")
     public boolean isTrue() {
         return this instanceof ExpressionNumber && ((ExpressionNumber)this).number == 1;
+    }
+    public boolean isNil() {
+        return this instanceof ExpressionPair &&
+            ((ExpressionPair)this).left == null &&
+            ((ExpressionPair)this).right == null;
     }
 }

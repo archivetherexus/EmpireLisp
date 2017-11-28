@@ -33,7 +33,7 @@ public class ExpressionSymbol extends Expression {
     }
 
     @Override
-    public Expression eval(Environment environment) throws LispException {
-        return environment.getVariable(symbol);
+    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+        callback.evalCallback(environment.getVariable(symbol));
     }
 }

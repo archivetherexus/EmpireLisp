@@ -54,39 +54,63 @@ public class ExpressionPair extends Expression {
     }
 
     @Override
-    public Expression eval(Environment environment) throws LispException {
+    public void eval(Environment environment, IEvalCallback callback) throws LispException {
         if (this.right instanceof ExpressionPair) {
-            Expression fun = this.left.eval(environment);
-            ExpressionPair result;
-            if (fun instanceof IApplicable) {
-                if (!((IApplicable)fun).isLazyEval()) {
-                    ExpressionPair list = (ExpressionPair) this.right;
-                    result = new ExpressionPair(null, null);
-                    ExpressionPair head = result;
-                    while (list.left != null) {
-                        head.left = list.left.eval(environment);
-                        head.right = new ExpressionPair(null, null);
-                        head = (ExpressionPair) head.right;
+            ExpressionPair pair = this;
+            this.left.eval(environment, new IEvalCallback() {
+                @Override
+                public void evalCallback(Expression fun) throws LispException {
+                    if (fun instanceof IApplicable) {
+                        if (!((IApplicable)fun).isLazyEval()) {
+                            ExpressionPair result = new ExpressionPair(null, null);
+                            class ListWrapper {
+                                ExpressionPair value = (ExpressionPair) pair.right;
+                            }
+                            final ListWrapper list = new ListWrapper();
+                            class HeadWrapper {
+                                ExpressionPair value = result;
+                            }
+                            final HeadWrapper head = new HeadWrapper();
 
-                        if (list.right instanceof ExpressionPair) {
-                            list = (ExpressionPair) list.right;
-                        } else {
-                            break;
+                            if (pair.right instanceof ExpressionPair) {
+                                if (((ExpressionPair) pair.right).left != null) {
+                                    ((ExpressionPair) pair.right).left.eval(environment, new IEvalCallback() {
+                                        @Override
+                                        public void evalCallback(Expression argument) throws LispException {
+                                            head.value.left = argument;
+                                            head.value.right = new ExpressionPair(null, null);
+                                            head.value = (ExpressionPair) head.value.right;
+
+                                            if (list.value.right instanceof ExpressionPair) {
+                                                list.value = (ExpressionPair) list.value.right;
+                                                if (list.value.left != null) {
+                                                    list.value.left.eval(environment, this);
+                                                } else {
+                                                    ((IApplicable) fun).apply(environment, result, callback);
+                                                }
+                                            } else {
+                                                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                                            }
+                                        }
+                                    });
+                                }
+                                else {
+                                    ((IApplicable) fun).apply(environment, result, callback);
+                                }
+                            }
+                        }
+                        else {
+                            ((IApplicable)fun).apply(environment, pair.right, callback);
                         }
                     }
+                    else {
+                        throw new LispException(LispException.ErrorType.NOT_APPLICABLE,"\"" + fun.toString() + "\" is not applicable");
+                    }
                 }
-                else {
-                    result = (ExpressionPair) this.right;
-                }
-
-                return ((IApplicable)fun).apply(environment, result);
-            }
-            else {
-                throw new LispException(LispException.ErrorType.NOT_APPLICABLE,"List is not applicable");
-            }
+            });
         }
         else {
-            return this;
+            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
         }
     }
 

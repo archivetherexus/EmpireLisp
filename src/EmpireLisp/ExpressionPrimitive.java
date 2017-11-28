@@ -12,8 +12,8 @@ public abstract class ExpressionPrimitive extends Expression implements IApplica
     }
 
     @Override
-    public Expression eval(Environment environment) {
-        return this;
+    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+        callback.evalCallback(this);
     }
 
     @Override

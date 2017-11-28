@@ -8,10 +8,12 @@ package EmpireLisp;
 public class ExpressionString extends Expression implements ISequence {
 
     public String string;
+    private ExpressionNumber length;
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionString(String string) {
         this.string = string;
+        length = new ExpressionNumber(string.length());
     }
 
     @Override
@@ -32,13 +34,13 @@ public class ExpressionString extends Expression implements ISequence {
     }
 
     @Override
-    public Expression eval(Environment environment) throws LispException {
-        return this;
+    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+        callback.evalCallback(this);
     }
 
     @Override
     public ExpressionNumber getLength() {
-        return new ExpressionNumber(string.length()); // FIXME: Optimise this. We don't need a new copy each time!
+        return length;
     }
 
     @Override

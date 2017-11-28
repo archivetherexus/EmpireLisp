@@ -13,11 +13,11 @@ public class ExpressionLambda extends Expression implements IApplicable {
 
     private List<String> arguments;
     private List<Expression> body;
-    private Environment environment;
+    private Environment parentEnvironment;
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionLambda(Environment environment, ExpressionPair argumentList, ExpressionPair bodyList) throws LispException {
-        this.environment = new Environment(environment);
+        this.parentEnvironment = environment;
         this.body = bodyList.toList();
         this.arguments = new ArrayList<>();
 
@@ -26,7 +26,7 @@ public class ExpressionLambda extends Expression implements IApplicable {
                 this.arguments.add(((ExpressionSymbol) argumentList.left).symbol);
             }
             else {
-                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument list!");
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
             }
 
             if (argumentList.right instanceof  ExpressionPair) {
@@ -50,34 +50,49 @@ public class ExpressionLambda extends Expression implements IApplicable {
     }
 
     @Override
-    public Expression eval(Environment environment) {
-        return this;
+    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+        callback.evalCallback(this);
     }
 
     @Override
-    public Expression apply(Environment environment, Expression uncheckedArguments) throws LispException {
-        Expression result = null;
+    public void apply(Environment environment, Expression uncheckedArguments, IEvalCallback callback) throws LispException {
+        Environment lambdaEnvironment = new Environment(this.parentEnvironment);
 
+        int numberOfArguments = 0;
         if (uncheckedArguments instanceof ExpressionPair) {
             ExpressionPair arguments = (ExpressionPair) uncheckedArguments;
             Iterator<String> iterator = this.arguments.iterator();
-            while (arguments.left != null && iterator.hasNext()) {
-                this.environment.setVariable(iterator.next(), arguments.left);
-
+            while (arguments.left != null) {
+                numberOfArguments++;
+                if (iterator.hasNext()){
+                    lambdaEnvironment.setVariable(iterator.next(), arguments.left);
+                }
                 if (arguments.right instanceof ExpressionPair) {
                     arguments = (ExpressionPair) arguments.right;
                 } else {
                     break;
                 }
             }
-            // TODO: Check for arity-missmatch!
+        }
+        else {
+            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+        }
+        if (numberOfArguments != arguments.size()) {
+            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(arguments.size(), numberOfArguments));
         }
 
-        for (Expression expression : body) {
-            result = expression.eval(this.environment);
-        }
-
-        return result;
+        Iterator<Expression> iterator = body.iterator();
+        iterator.next().eval(lambdaEnvironment, new IEvalCallback() {
+            @Override
+            public void evalCallback(Expression result) throws LispException {
+                if (iterator.hasNext()) {
+                    iterator.next().eval(lambdaEnvironment, this);
+                }
+                else {
+                    callback.evalCallback(result);
+                }
+            }
+        });
     }
 
     @Override

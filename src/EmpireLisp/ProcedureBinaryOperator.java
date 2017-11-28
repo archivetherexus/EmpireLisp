@@ -20,7 +20,7 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
 
     @SuppressWarnings("unchecked")
     @Override
-    public Expression apply(Environment environment, Expression arguments) throws LispException {
+    public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
         if (arguments instanceof ExpressionPair) {
             ExpressionPair firstPair = (ExpressionPair) arguments;
 
@@ -30,12 +30,17 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
                 if (firstPair.right instanceof ExpressionPair) {
                     ExpressionPair secondPair = (ExpressionPair) firstPair.right;
 
-                    if (type2.isInstance(secondPair.left)) {
-                        T2 valueB = (T2) secondPair.left;
-                        return operate(valueA, valueB);
+                    if (secondPair.left != null && (secondPair.right == null || secondPair.right.isNil())) {
+                        if (type2.isInstance(secondPair.left)) {
+                            T2 valueB = (T2) secondPair.left;
+                            callback.evalCallback(operate(valueA, valueB));
+                        } else {
+                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType(getType2Name(), secondPair.left.toString()));
+                        }
                     }
                     else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType(getType2Name(), secondPair.left.toString()));
+                        int argsReceived = ((ExpressionPair) arguments).toList().size();
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(2, argsReceived));
                     }
                 }
                 else {

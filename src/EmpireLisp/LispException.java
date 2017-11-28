@@ -13,6 +13,9 @@ public class LispException extends Exception {
         public static String expectedType(String type, String got) {
             return "Expected " + type + " but got: " + got;
         }
+        public static String expectedAmountOfArguments(int expected, int got) {
+            return "Expected " + expected + " arguments but got " + got;
+        }
     }
 
     public enum ErrorType {
