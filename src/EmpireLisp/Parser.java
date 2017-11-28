@@ -35,8 +35,7 @@ public class Parser {
 
             if (character == 255 || character == -1) {
                 return null;
-            }
-            else if (character == '(') {
+            } else if (character == '(') {
                 return "(";
             } else if (character == ')') {
                 return ")";
@@ -56,8 +55,7 @@ public class Parser {
                     character = stream.read();
                 }
                 return builder.toString();
-            }
-            else {
+            } else {
                 StringBuilder builder = new StringBuilder();
                 builder.append((char) character);
 
@@ -82,9 +80,7 @@ public class Parser {
 
         if (token == null) {
             throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing right-angel parentheses!");
-        }
-
-        else if (token.equals("(")) {
+        } else if (token.equals("(")) {
             parenthesesCount++;
             Expression expression = parseExpression(stream);
             if (expression != null) {
@@ -94,30 +90,24 @@ public class Parser {
                     Expression expression2 = parseExpression(stream);
                     if (expression2 == null) {
                         break;
-                    }
-                    else {
+                    } else {
                         head.right = new ExpressionPair(expression2, Environment.nilValue);
                         head = (ExpressionPair) head.right;
                     }
                 }
-            }
-            else {
+            } else {
                 return Environment.nilValue;
             }
-        }
-        else if (token.equals(")")) {
+        } else if (token.equals(")")) {
             if (parenthesesCount > 0) {
                 parenthesesCount--;
                 return null;
-            }
-            else {
+            } else {
                 throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing left-angel parentheses!");
             }
-        }
-        else if (token.charAt(0) == '\"') {
+        } else if (token.charAt(0) == '\"') {
             return new ExpressionString(token.substring(1));
-        }
-        else {
+        } else {
             try {
                 result = new ExpressionNumber(Double.parseDouble(token));
             } catch (NumberFormatException nfe) {
@@ -150,13 +140,12 @@ public class Parser {
         Iterator<String> iterator1 = resultList.iterator();
         Iterator<String> iterator2 = expectedList.iterator();
         boolean equal = true;
-        while(iterator1.hasNext() || iterator2.hasNext()) {
+        while (iterator1.hasNext() || iterator2.hasNext()) {
             if (iterator1.hasNext() && iterator2.hasNext()) {
                 if (!iterator1.next().equals(iterator2.next())) {
                     equal = false;
                 }
-            }
-            else {
+            } else {
                 equal = false;
                 break;
             }
@@ -168,7 +157,7 @@ public class Parser {
     }
 
     public static void readTokenTest() throws LispException {
-        readTokenTestList("(hello world (how are you?))", new ArrayList<String>(){{
+        readTokenTestList("(hello world (how are you?))", new ArrayList<String>() {{
             add("(");
             add("hello");
             add("world");
@@ -180,7 +169,7 @@ public class Parser {
             add(")");
         }});
 
-        readTokenTestList("( + 2 ( + 4 4 ) )", new ArrayList<String>(){{
+        readTokenTestList("( + 2 ( + 4 4 ) )", new ArrayList<String>() {{
             add("(");
             add("+");
             add("2");
@@ -192,13 +181,13 @@ public class Parser {
             add(")");
         }});
 
-        readTokenTestList("( \"Hello () World!\" 123)", new ArrayList<String>(){{
+        readTokenTestList("( \"Hello () World!\" 123)", new ArrayList<String>() {{
             add("(");
             add("\"Hello () World!");
             add("123");
             add(")");
         }});
-        readTokenTestList("Hello World ; This is a comment\n!", new ArrayList<String>(){{
+        readTokenTestList("Hello World ; This is a comment\n!", new ArrayList<String>() {{
             add("Hello");
             add("World");
             add("!");

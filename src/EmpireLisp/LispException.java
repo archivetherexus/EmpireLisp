@@ -10,18 +10,20 @@ public class LispException extends Exception {
     @SuppressWarnings("WeakerAccess")
     public static class ErrorMessages {
         public static String ARGUMENTS_MUST_BE_IN_LIST = "Function arguments must be in a valid list.";
+
         public static String expectedType(String type, String got) {
             return "Expected " + type + " but got: " + got;
         }
+
         public static String expectedAmountOfArguments(int expected, int got) {
             return "Expected " + expected + " arguments but got " + got;
         }
     }
 
     public enum ErrorType {
-        ARITY_MISS_MATCH ("Arity miss-match"),
-        PARSE_ERROR ("Parse error"),
-        UNBOUND_VARIABLE ("Unbound variable"),
+        ARITY_MISS_MATCH("Arity miss-match"),
+        PARSE_ERROR("Parse error"),
+        UNBOUND_VARIABLE("Unbound variable"),
         INVALID_ARGUMENTS("Invalid arguments"),
         NOT_APPLICABLE("Not applicable"),
         UNIT_TEST_FAILURE("Unit test failure"),
@@ -46,13 +48,13 @@ public class LispException extends Exception {
     @SuppressWarnings("WeakerAccess")
     public ErrorType type;
 
-    public LispException (ErrorType type, String message) {
+    public LispException(ErrorType type, String message) {
         super(message);
         this.type = type;
     }
 
     @SuppressWarnings("unused")
-    public LispException (ErrorType type) {
+    public LispException(ErrorType type) {
         super("");
         this.type = type;
     }
@@ -62,8 +64,7 @@ public class LispException extends Exception {
         String message = super.getMessage();
         if (message.equals("")) {
             return type.getName();
-        }
-        else {
+        } else {
             return type.getName() + ": " + super.getMessage();
         }
     }

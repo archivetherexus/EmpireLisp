@@ -27,8 +27,7 @@ public class ExpressionString extends Expression implements ISequence {
             ExpressionString otherString = (ExpressionString) other;
 
             return string.equals(otherString.string);
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -54,8 +53,7 @@ public class ExpressionString extends Expression implements ISequence {
             ExpressionString otherString = (ExpressionString) other;
 
             return new ExpressionString(string + otherString.string);
-        }
-        else {
+        } else {
             throw new RuntimeException("ERROR: What to do?"); // TODO: Find the best solution. i.e returning a concatenation object for instance.
         }
     }

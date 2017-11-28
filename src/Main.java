@@ -30,14 +30,18 @@ public class Main {
             public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
-                    if (firstPair.left instanceof ExpressionString) {
-                        ExpressionString valueA = (ExpressionString) firstPair.left;
-                        System.out.println(valueA.string);
-                        callback.evalCallback(Environment.nilValue);
-                    }
-                    else {
-                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("string", firstPair.left.toString()));
-                    }
+                    firstPair.left.eval(environment, new IEvalCallback() {
+                            @Override
+                            public void evalCallback(Expression result) throws LispException {
+                                if (result instanceof ExpressionString) {
+                                    System.out.println(((ExpressionString)result).string);
+                                    callback.evalCallback(Environment.nilValue);
+                                }
+                                else {
+                                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("string", firstPair.left.toString()));
+                                }
+                            }
+                        });
                 }
                 else {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);

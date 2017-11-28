@@ -26,8 +26,7 @@ public class ExpressionSymbol extends Expression {
             ExpressionSymbol otherSymbol = (ExpressionSymbol) other;
 
             return otherSymbol.symbol.equals(this.symbol);
-        }
-        else {
+        } else {
             return false;
         }
     }

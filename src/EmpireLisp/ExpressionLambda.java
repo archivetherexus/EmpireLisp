@@ -31,8 +31,7 @@ public class ExpressionLambda extends Expression implements IApplicable {
                 }
                 if (pair.right instanceof ExpressionPair) {
                     argumentList = pair.right;
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -68,8 +67,7 @@ public class ExpressionLambda extends Expression implements IApplicable {
                     public void evalCallback(Expression result) throws LispException {
                         if (iterator.hasNext()) {
                             iterator.next().eval(lambdaEnvironment, this);
-                        }
-                        else {
+                        } else {
                             callback.evalCallback(result);
                         }
                     }
@@ -91,24 +89,20 @@ public class ExpressionLambda extends Expression implements IApplicable {
                         } else {
                             if (!iterator2.hasNext()) {
                                 done.callback();
-                            }
-                            else {
+                            } else {
                                 int numberOfArguments = ((ExpressionPair) uncheckedArguments).toList().size();
                                 throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(argumentsExpected, numberOfArguments));
                             }
                         }
-                    }
-                    else {
+                    } else {
                         int numberOfArguments = ((ExpressionPair) uncheckedArguments).toList().size();
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(argumentsExpected, numberOfArguments));
                     }
                 }
             });
-        }
-        else if (uncheckedArguments.isNil()) {
+        } else if (uncheckedArguments.isNil()) {
             done.callback();
-        }
-        else {
+        } else {
             throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
         }
     }

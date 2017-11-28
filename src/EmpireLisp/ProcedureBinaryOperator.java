@@ -15,7 +15,9 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
     }
 
     public abstract Expression operate(T1 arg1, T2 arg2);
+
     public abstract String getType1Name();
+
     public abstract String getType2Name();
 
     @SuppressWarnings("unchecked")
@@ -45,23 +47,19 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
                                         }
                                     }
                                 });
-                            }
-                            else {
+                            } else {
                                 int argsReceived = ((ExpressionPair) arguments).toList().size();
                                 throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(2, argsReceived));
                             }
-                        }
-                        else {
+                        } else {
                             throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                         }
-                    }
-                    else {
+                    } else {
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType(getType1Name(), uncheckedValueA.toString()));
                     }
                 }
             });
-        }
-        else {
+        } else {
             throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
         }
     }

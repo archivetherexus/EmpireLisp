@@ -26,8 +26,7 @@ public class ExpressionPair extends Expression {
     public String toString() {
         if (left != null || right != null) {
             return "(" + (left != null ? left.toString() : "") + " . " + (right != null ? right.toString() : "") + ")";
-        }
-        else {
+        } else {
             return "()";
         }
     }
@@ -38,18 +37,14 @@ public class ExpressionPair extends Expression {
             ExpressionPair otherPair = (ExpressionPair) other;
             if (this.left == null && this.right == null) {
                 return otherPair.left == null && otherPair.right == null;
-            }
-            else if (this.left == null) {
+            } else if (this.left == null) {
                 return otherPair.left == null && this.right.equals(otherPair.right);
-            }
-            else if (this.right == null) {
+            } else if (this.right == null) {
                 return this.left.equals(otherPair.left) && otherPair.right == null;
-            }
-            else {
+            } else {
                 return this.left.equals(otherPair.left) && this.right.equals(otherPair.right);
             }
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -65,10 +60,9 @@ public class ExpressionPair extends Expression {
             @Override
             public void evalCallback(Expression operator) throws LispException {
                 if (operator instanceof IApplicable) {
-                    ((IApplicable)operator).apply(environment, operand, callback);
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.NOT_APPLICABLE,"\"" + operator.toString() + "\" is not applicable");
+                    ((IApplicable) operator).apply(environment, operand, callback);
+                } else {
+                    throw new LispException(LispException.ErrorType.NOT_APPLICABLE, "\"" + operator.toString() + "\" is not applicable");
                 }
             }
         });
@@ -78,13 +72,12 @@ public class ExpressionPair extends Expression {
     public List<Expression> toList() {
         List<Expression> result = new ArrayList<>();
         ExpressionPair list = this;
-        while(list.left != null) {
+        while (list.left != null) {
             result.add(list.left);
 
-            if (list.right instanceof  ExpressionPair) {
+            if (list.right instanceof ExpressionPair) {
                 list = (ExpressionPair) list.right;
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -106,17 +99,15 @@ public class ExpressionPair extends Expression {
             }
 
             @Override
-            public Expression next(){
+            public Expression next() {
                 Expression value = head.value.left;
                 if (head.value.right instanceof ExpressionPair) {
                     head.value = (ExpressionPair) head.value.right;
                     return value;
-                }
-                else if (head.value.right.isNil()) {
+                } else if (head.value.right.isNil()) {
                     head.end = true;
                     return value;
-                }
-                else {
+                } else {
                     throw new RuntimeException("Invalid list structure!");
                 }
             }

@@ -25,8 +25,7 @@ public class ExpressionNumber extends Expression {
         if (other instanceof ExpressionNumber) {
             ExpressionNumber otherNumber = (ExpressionNumber) other;
             return otherNumber.number == this.number;
-        }
-        else {
+        } else {
             return false;
         }
     }

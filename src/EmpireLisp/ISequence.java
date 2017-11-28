@@ -7,6 +7,8 @@ package EmpireLisp;
 @SuppressWarnings("JavaDoc")
 public interface ISequence {
     ExpressionNumber getLength();
+
     Expression atIndex(ExpressionNumber index);
+
     ISequence concatenate(ISequence other);
 }
