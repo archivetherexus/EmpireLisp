@@ -51,21 +51,26 @@ public class ExpressionPair extends Expression {
 
     @SuppressWarnings("Convert2Lambda")
     @Override
-    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+    public void eval(IEvaluator evaluator, Environment environment, IEvalCallback callback) throws LispException {
         Expression operator = this.left;
         Expression operand = this.right;
 
         // Evaluate the operator. //
-        operator.eval(environment, new IEvalCallback() {
-            @Override
-            public void evalCallback(Expression operator) throws LispException {
-                if (operator instanceof IApplicable) {
-                    ((IApplicable) operator).apply(environment, operand, callback);
-                } else {
-                    throw new LispException(LispException.ErrorType.NOT_APPLICABLE, "\"" + operator.toString() + "\" is not applicable");
+        if (evaluator.continueEvaluation()) {
+            operator.eval(evaluator, environment, new IEvalCallback() {
+                @Override
+                public void evalCallback(Expression operator) throws LispException {
+                    if (operator instanceof IApplicable) {
+                        ((IApplicable) operator).apply(evaluator, environment, operand, callback);
+
+                    } else {
+                        throw new LispException(LispException.ErrorType.NOT_APPLICABLE, "\"" + operator.toString() + "\" is not applicable");
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            evaluator.stashEvaluation(this, environment, callback);
+        }
     }
 
     @SuppressWarnings("WeakerAccess")

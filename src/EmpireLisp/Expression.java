@@ -10,7 +10,7 @@ public abstract class Expression {
 
     public abstract boolean equals(Expression other);
 
-    public abstract void eval(Environment environment, IEvalCallback callback) throws LispException;
+    public abstract void eval(IEvaluator evaluator, Environment environment, IEvalCallback callback) throws LispException;
 
     @SuppressWarnings("WeakerAccess")
     public boolean isTrue() {

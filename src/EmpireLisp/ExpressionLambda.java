@@ -50,23 +50,23 @@ public class ExpressionLambda extends Expression implements IApplicable {
     }
 
     @Override
-    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+    public void eval(IEvaluator evaluator, Environment environment, IEvalCallback callback) throws LispException {
         callback.evalCallback(this);
     }
 
     @Override
-    public void apply(Environment environment, Expression uncheckedArguments, IEvalCallback callback) throws LispException {
+    public void apply(IEvaluator evaluator, Environment environment, Expression uncheckedArguments, IEvalCallback callback) throws LispException {
         Environment lambdaEnvironment = new Environment(this.parentEnvironment);
         final int argumentsExpected = this.arguments.size();
 
         class OnDoneCallback {
             void callback() throws LispException {
                 Iterator<Expression> iterator = body.iterator();
-                iterator.next().eval(lambdaEnvironment, new IEvalCallback() {
+                iterator.next().eval(evaluator, lambdaEnvironment, new IEvalCallback() {
                     @Override
                     public void evalCallback(Expression result) throws LispException {
                         if (iterator.hasNext()) {
-                            iterator.next().eval(lambdaEnvironment, this);
+                            iterator.next().eval(evaluator, lambdaEnvironment, this);
                         } else {
                             callback.evalCallback(result);
                         }
@@ -79,13 +79,13 @@ public class ExpressionLambda extends Expression implements IApplicable {
         if (uncheckedArguments instanceof ExpressionPair) {
             Iterator<Expression> iterator1 = ((ExpressionPair) uncheckedArguments).iterator();
             Iterator<String> iterator2 = arguments.iterator();
-            iterator1.next().eval(environment, new IEvalCallback() {
+            iterator1.next().eval(evaluator, environment, new IEvalCallback() {
                 @Override
                 public void evalCallback(Expression result) throws LispException {
                     if (iterator2.hasNext()) {
                         lambdaEnvironment.setVariable(iterator2.next(), result);
                         if (iterator1.hasNext()) {
-                            iterator1.next().eval(environment, this);
+                            iterator1.next().eval(evaluator, environment, this);
                         } else {
                             if (!iterator2.hasNext()) {
                                 done.callback();

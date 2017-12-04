@@ -22,11 +22,11 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
 
     @SuppressWarnings("unchecked")
     @Override
-    public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+    public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
         if (arguments instanceof ExpressionPair) {
             ExpressionPair firstPair = (ExpressionPair) arguments;
 
-            firstPair.left.eval(environment, new IEvalCallback() {
+            firstPair.left.eval(evaluator, environment, new IEvalCallback() {
                 @Override
                 public void evalCallback(Expression uncheckedValueA) throws LispException {
                     if (type1.isInstance(uncheckedValueA)) {
@@ -36,7 +36,7 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
                             ExpressionPair secondPair = (ExpressionPair) firstPair.right;
 
                             if (!secondPair.left.isNil() && secondPair.right.isNil()) {
-                                secondPair.left.eval(environment, new IEvalCallback() {
+                                secondPair.left.eval(evaluator, environment, new IEvalCallback() {
                                     @Override
                                     public void evalCallback(Expression uncheckedValueB) throws LispException {
                                         if (type2.isInstance(uncheckedValueB)) {

@@ -6,5 +6,5 @@ package EmpireLisp;
  */
 @SuppressWarnings("JavaDoc")
 public interface IApplicable {
-    void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException;
+    void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException;
 }

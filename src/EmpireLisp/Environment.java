@@ -304,17 +304,17 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
                         ExpressionPair secondPair = (ExpressionPair) firstPair.right;
                         Expression valueA = firstPair.left;
                         Expression valueB = secondPair.left;
-                        valueA.eval(environment, new IEvalCallback() {
+                        valueA.eval(evaluator, environment, new IEvalCallback() {
                             @Override
                             public void evalCallback(Expression resultA) throws LispException {
-                                valueB.eval(environment, new IEvalCallback() {
+                                valueB.eval(evaluator, environment, new IEvalCallback() {
                                     @Override
                                     public void evalCallback(Expression resultB) throws LispException {
                                         callback.evalCallback(resultA.equals(resultB) ? trueValue : falseValue);
@@ -340,7 +340,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
@@ -363,7 +363,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     callback.evalCallback(firstPair.left);
@@ -380,7 +380,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
 
@@ -403,7 +403,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
@@ -435,7 +435,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
@@ -472,14 +472,14 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
-                        firstPair.left.eval(environment, new IEvalCallback() {
+                        firstPair.left.eval(evaluator, environment, new IEvalCallback() {
                             @Override
                             public void evalCallback(Expression valueA) throws LispException {
-                                ((ExpressionPair) firstPair.right).left.eval(environment, new IEvalCallback() {
+                                ((ExpressionPair) firstPair.right).left.eval(evaluator, environment, new IEvalCallback() {
                                     @Override
                                     public void evalCallback(Expression valueB) throws LispException {
                                         callback.evalCallback(new ExpressionPair(valueA, valueB));
@@ -503,9 +503,9 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
-                    ((ExpressionPair) arguments).left.eval(environment, new IEvalCallback() {
+                    ((ExpressionPair) arguments).left.eval(evaluator, environment, new IEvalCallback() {
                         @Override
                         public void evalCallback(Expression result) throws LispException {
                             if (result instanceof ExpressionPair) {
@@ -528,9 +528,9 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
-                    ((ExpressionPair) arguments).left.eval(environment, new IEvalCallback() {
+                    ((ExpressionPair) arguments).left.eval(evaluator, environment, new IEvalCallback() {
                         @Override
                         public void evalCallback(Expression result) throws LispException {
                             if (result instanceof ExpressionPair) {
@@ -555,7 +555,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
 
@@ -569,13 +569,13 @@ public class Environment {
                             Expression thenExpression = secondPair.left;
                             Expression elseExpression = thirdPair.left;
 
-                            testExpression.eval(environment, new IEvalCallback() {
+                            testExpression.eval(evaluator, environment, new IEvalCallback() {
                                 @Override
                                 public void evalCallback(Expression result) throws LispException {
                                     if (result.isTrue()) {
-                                        thenExpression.eval(environment, callback);
+                                        thenExpression.eval(evaluator, environment, callback);
                                     } else {
-                                        elseExpression.eval(environment, callback);
+                                        elseExpression.eval(evaluator, environment, callback);
                                     }
                                 }
                             });
@@ -600,7 +600,7 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
 
@@ -614,12 +614,12 @@ public class Environment {
                             ExpressionPair value = (ExpressionPair) uncheckedCondition;
                         }
                         ConditionWrapper condition = new ConditionWrapper();
-                        condition.value.left.eval(environment, new IEvalCallback() {
+                        condition.value.left.eval(evaluator, environment, new IEvalCallback() {
                             @Override
                             public void evalCallback(Expression result) throws LispException {
                                 if (result.isTrue()) {
                                     if (condition.value.right instanceof ExpressionPair) {
-                                        ((ExpressionPair) condition.value.right).left.eval(environment, callback);
+                                        ((ExpressionPair) condition.value.right).left.eval(evaluator, environment, callback);
                                     } else {
                                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                                     }
@@ -627,7 +627,7 @@ public class Environment {
                                     Expression uncheckedCondition = iterator.next();
                                     if (uncheckedCondition instanceof ExpressionPair) {
                                         condition.value = (ExpressionPair) uncheckedCondition;
-                                        condition.value.left.eval(environment, this);
+                                        condition.value.left.eval(evaluator, environment, this);
                                     } else {
                                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                                     }
@@ -653,14 +653,14 @@ public class Environment {
             }
 
             @Override
-            public void apply(Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
 
                     if (firstPair.left instanceof ExpressionSymbol) {
                         ExpressionSymbol symbol = (ExpressionSymbol) firstPair.left;
                         if (firstPair.right instanceof ExpressionPair) {
-                            ((ExpressionPair) firstPair.right).left.eval(environment, new IEvalCallback() {
+                            ((ExpressionPair) firstPair.right).left.eval(evaluator, environment, new IEvalCallback() {
                                 @Override
                                 public void evalCallback(Expression result) throws LispException {
                                     environment.setVariable(symbol.symbol, result);
@@ -695,16 +695,28 @@ public class Environment {
             PushbackInputStream stream1 = new PushbackInputStream(new ByteArrayInputStream(what.getBytes(charset)));
             PushbackInputStream stream2 = new PushbackInputStream(new ByteArrayInputStream(expect.getBytes(charset)));
 
+            IEvaluator evaluator = new IEvaluator() {
+                @Override
+                public boolean continueEvaluation() {
+                    return true;
+                }
+
+                @Override
+                public void stashEvaluation(Expression expression, Environment environment, IEvalCallback callback) {
+
+                }
+            };
+
             class Result {
                 boolean result = false;
                 boolean callback_fired = false;
             }
             Result result = new Result();
 
-            parser.parseExpression(stream1).eval(environment, new IEvalCallback() {
+            parser.parseExpression(stream1).eval(evaluator, environment, new IEvalCallback() {
                 @Override
                 public void evalCallback(Expression expression1) throws LispException {
-                    parser.parseExpression(stream2).eval(environment, new IEvalCallback() {
+                    parser.parseExpression(stream2).eval(evaluator, environment, new IEvalCallback() {
                         @Override
                         public void evalCallback(Expression expression2) throws LispException {
                             result.result = expression1.equals(expression2);

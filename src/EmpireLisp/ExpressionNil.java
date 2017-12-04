@@ -17,7 +17,7 @@ public class ExpressionNil extends Expression {
     }
 
     @Override
-    public void eval(Environment environment, IEvalCallback callback) throws LispException {
+    public void eval(IEvaluator evaluator, Environment environment, IEvalCallback callback) throws LispException {
         callback.evalCallback(this);
     }
 }
