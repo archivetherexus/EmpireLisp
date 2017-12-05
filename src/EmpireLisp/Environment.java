@@ -55,6 +55,7 @@ public class Environment {
         environment.setVariable("true", trueValue);
         environment.setVariable("else", trueValue);
         environment.setVariable("false", falseValue);
+        environment.setVariable("nil", nilValue);
 
         abstract class SafeProcedureBinaryOperator<T1 extends Expression, T2 extends Expression> extends ProcedureBinaryOperator<T1, T2> implements IUnitTestable {
             SafeProcedureBinaryOperator(Class<T1> type1, Class<T2> type2) {
@@ -376,7 +377,8 @@ public class Environment {
         environment.setVariable("length", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
-                return environment.evalTest("(length \"Hello\")", "5");
+                return environment.evalTest("(length \"Hello\")", "5") &&
+                        environment.evalTest("(length (cons 4 (cons 5 (cons 6 nil))))", "3");
             }
 
             @Override
@@ -399,7 +401,9 @@ public class Environment {
         environment.setVariable("at", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
-                return environment.evalTest("(at \"Hello\" 0)", "" + (int) 'H');
+                return environment.evalTest("(at \"Hello\" 0)", "" + (int) 'H') &&
+                        environment.evalTest("(at (cons 1 (cons 2 nil)) 1)", "2") &&
+                        environment.evalTest("(at (cons 1 (cons 2 nil)) 0)", "1");
             }
 
             @Override
@@ -408,17 +412,28 @@ public class Environment {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
                         ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-                        if (firstPair.left instanceof ISequence) {
-                            ISequence valueA = (ISequence) firstPair.left;
-                            if (secondPair.left instanceof ExpressionNumber) {
-                                ExpressionNumber valueB = (ExpressionNumber) secondPair.left;
-                                callback.evalCallback(valueA.atIndex(valueB));
-                            } else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", secondPair.left.toString()));
+                        firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                            @Override
+                            public void evalCallback(Expression resultValueA) throws LispException {
+                                if (resultValueA instanceof ISequence) {
+                                    ISequence valueA = (ISequence) resultValueA;
+                                    secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                        @Override
+                                        public void evalCallback(Expression resultValueB) throws LispException {
+                                            if (resultValueB instanceof ExpressionNumber) {
+                                                Expression result = valueA.atIndex((ExpressionNumber) resultValueB);
+                                                callback.evalCallback(result);
+
+                                            } else {
+                                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("number", secondPair.left.toString()));
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
+                                }
                             }
-                        } else {
-                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
-                        }
+                        });
                     } else {
                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                     }
@@ -431,7 +446,8 @@ public class Environment {
         environment.setVariable("concat", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
-                return environment.evalTest("(concat \"Hello\" \"World\")", "\"HelloWorld\"");
+                return environment.evalTest("(concat \"Hello\" \"World\")", "\"HelloWorld\"") &&
+                        environment.evalTest("(concat (cons 1 (cons 2 nil)) (cons 3 (cons 4 nil)))", "(cons 1 (cons 2 (cons 3 (cons 4 nil))))");
             }
 
             @Override
@@ -440,22 +456,32 @@ public class Environment {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     if (firstPair.right instanceof ExpressionPair) {
                         ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-                        if (firstPair.left instanceof ISequence) {
-                            ISequence valueA = (ISequence) firstPair.left;
-                            if (secondPair.left instanceof ISequence) {
-                                ISequence valueB = (ISequence) secondPair.left;
-                                ISequence result = valueA.concatenate(valueB);
-                                if (result instanceof Expression) {
-                                    callback.evalCallback((Expression) result);
+                        firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                            @Override
+                            public void evalCallback(Expression resultValueA) throws LispException {
+                                if (resultValueA instanceof ISequence) {
+                                    ISequence valueA = (ISequence) resultValueA;
+                                    secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                        @Override
+                                        public void evalCallback(Expression resultValueB) throws LispException {
+                                            if (resultValueB instanceof ISequence) {
+                                                ISequence valueB = (ISequence) resultValueB;
+                                                ISequence result = valueA.concatenate(valueB);
+                                                if (result instanceof Expression) {
+                                                    callback.evalCallback((Expression) result);
+                                                } else {
+                                                    throw new LispException(LispException.ErrorType.INTERNAL_ERROR);
+                                                }
+                                            } else {
+                                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", secondPair.left.toString()));
+                                            }
+                                        }
+                                    });
                                 } else {
-                                    throw new LispException(LispException.ErrorType.INTERNAL_ERROR);
+                                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
                                 }
-                            } else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", secondPair.left.toString()));
                             }
-                        } else {
-                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
-                        }
+                        });
                     } else {
                         throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                     }

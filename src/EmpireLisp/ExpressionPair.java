@@ -9,7 +9,7 @@ import java.util.List;
  * @date 11/20/17
  */
 @SuppressWarnings("JavaDoc")
-public class ExpressionPair extends Expression {
+public class ExpressionPair extends Expression implements ISequence {
     @SuppressWarnings("WeakerAccess")
     public Expression left;
 
@@ -117,5 +117,74 @@ public class ExpressionPair extends Expression {
                 }
             }
         };
+    }
+
+    @Override
+    public ExpressionNumber getLength() {
+        Iterator i = iterator();
+        int length = 0;
+        while(i.hasNext()) {
+            i.next();
+            length++;
+        }
+        return new ExpressionNumber(length);
+    }
+
+    @Override
+    public Expression atIndex(ExpressionNumber index) throws LispException {
+        double at = index.number;
+        Iterator<Expression> i = iterator();
+        Expression value;
+        for(value = null; at >= 0 && i.hasNext(); at--) {
+            value = i.next();
+        }
+        if (at != -1 || value == null) {
+            throw new LispException(LispException.ErrorType.ARRAY_OUT_OF_BOUNDS);
+        }
+        return value;
+    }
+
+    @Override
+    public ISequence concatenate(ISequence other) {
+        if (other instanceof ExpressionPair) {
+            Iterator<Expression> myIterator = iterator();
+            Iterator<Expression> theirIterator = ((ExpressionPair)other).iterator();
+
+            ExpressionPair head = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+            ExpressionPair result = head;
+
+            if (myIterator.hasNext()) {
+                while (true) {
+                    head.left = myIterator.next();
+                    if (myIterator.hasNext()) {
+                        head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                        head = (ExpressionPair) head.right;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (theirIterator.hasNext()) {
+                if (head.left != Environment.nilValue) {
+                    head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                    head = (ExpressionPair) head.right;
+                }
+                while (true) {
+                    head.left = theirIterator.next();
+                    if (theirIterator.hasNext()) {
+                        head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                        head = (ExpressionPair) head.right;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        return null; // TODO: Find something smart here...
     }
 }

@@ -27,7 +27,8 @@ public class LispException extends Exception {
         INVALID_ARGUMENTS("Invalid arguments"),
         NOT_APPLICABLE("Not applicable"),
         UNIT_TEST_FAILURE("Unit test failure"),
-        INTERNAL_ERROR("Internal error");
+        INTERNAL_ERROR("Internal error"),
+        ARRAY_OUT_OF_BOUNDS("Array out of bounds");
 
         private String name;
 

@@ -8,7 +8,7 @@ package EmpireLisp;
 public interface ISequence {
     ExpressionNumber getLength();
 
-    Expression atIndex(ExpressionNumber index);
+    Expression atIndex(ExpressionNumber index) throws LispException;
 
     ISequence concatenate(ISequence other);
 }
