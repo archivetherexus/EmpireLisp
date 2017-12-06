@@ -66,7 +66,8 @@ public class Main {
 
             @Override
             public boolean continueEvaluation() {
-                return maxEvaluations-- > 0;
+                //return maxEvaluations-- > 0;
+                return true;
             }
 
             @Override

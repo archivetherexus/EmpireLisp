@@ -1,5 +1,7 @@
 package EmpireLisp;
 
+import java.util.Iterator;
+
 /**
  * @author Tyrerexus
  * @date 11/24/17
@@ -56,5 +58,22 @@ public class ExpressionString extends Expression implements ISequence {
         } else {
             throw new RuntimeException("ERROR: What to do?"); // TODO: Find the best solution. i.e returning a concatenation object for instance.
         }
+    }
+
+    @Override
+    public Iterator<Expression> iterator() {
+        return new Iterator<Expression>() {
+            int position = 0;
+
+            @Override
+            public boolean hasNext() {
+                return position < string.length();
+            }
+
+            @Override
+            public Expression next() {
+                return new ExpressionNumber(string.charAt(position++));
+            }
+        };
     }
 }

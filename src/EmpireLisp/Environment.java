@@ -398,6 +398,69 @@ public class Environment {
             }
         });
 
+        environment.setVariable("map", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+                if (arguments instanceof ExpressionPair) {
+                    ExpressionPair firstPair = (ExpressionPair) arguments;
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                        firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                            @Override
+                            public void evalCallback(Expression functionResult) throws LispException {
+                                if (functionResult instanceof IApplicable) {
+                                    IApplicable function = (IApplicable) functionResult;
+                                    secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                        @Override
+                                        public void evalCallback(Expression sequenceResult) throws LispException {
+                                            if (sequenceResult instanceof ISequence) {
+                                                ExpressionPair listResult = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                                                class Head {
+                                                    ExpressionPair value = listResult;
+                                                };
+                                                Head head = new Head();
+                                                Iterator<Expression> iterator = ((ISequence)sequenceResult).iterator();
+                                                if (iterator.hasNext()) {
+                                                    function.apply(evaluator, environment, new ExpressionPair(iterator.next(), Environment.nilValue), new IEvalCallback() {
+                                                        @Override
+                                                        public void evalCallback(Expression result) throws LispException {
+                                                            head.value.left = result;
+                                                            if (iterator.hasNext()) {
+                                                                head.value.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                                                                head.value = (ExpressionPair) head.value.right;
+                                                                function.apply(evaluator, environment, new ExpressionPair(iterator.next(), Environment.nilValue), this);
+                                                            }
+                                                            else {
+                                                                callback.evalCallback(listResult);
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                } else {
+                                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("applicable", firstPair.left.toString()));
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                }
+                else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(map (lambda (x) (+ 1 x)) (cons 1 (cons 2 (cons 3 nil))))", "(cons 2 (cons 3 (cons 4 nil)))");
+            }
+        });
+
         environment.setVariable("at", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
