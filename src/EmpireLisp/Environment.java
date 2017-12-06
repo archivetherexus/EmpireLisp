@@ -396,7 +396,7 @@ public class Environment {
                                                 ExpressionPair value = listResult;
                                             }
                                             Head head = new Head();
-                                            Iterator<Expression> iterator = ((ISequence)sequenceResult).iterator();
+                                            Iterator<Expression> iterator = ((ISequence) sequenceResult).iterator();
                                             if (iterator.hasNext()) {
                                                 function.apply(evaluator, environment, new ExpressionPair(iterator.next(), Environment.nilValue), new IEvalCallback() {
                                                     @Override
@@ -406,8 +406,7 @@ public class Environment {
                                                             head.value.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
                                                             head.value = (ExpressionPair) head.value.right;
                                                             function.apply(evaluator, environment, new ExpressionPair(iterator.next(), Environment.nilValue), this);
-                                                        }
-                                                        else {
+                                                        } else {
                                                             callback.evalCallback(listResult);
                                                         }
                                                     }
@@ -422,8 +421,7 @@ public class Environment {
                             }
                         }
                     });
-                }
-                else {
+                } else {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                 }
             }
@@ -444,33 +442,33 @@ public class Environment {
 
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
-                    if (firstPair.right instanceof ExpressionPair) {
-                        ExpressionPair secondPair = (ExpressionPair) firstPair.right;
-                        firstPair.left.eval(evaluator, environment, new IEvalCallback() {
-                            @Override
-                            public void evalCallback(Expression resultValueA) throws LispException {
-                                if (resultValueA instanceof ISequence) {
-                                    ISequence valueA = (ISequence) resultValueA;
-                                    secondPair.left.eval(evaluator, environment, new IEvalCallback() {
-                                        @Override
-                                        public void evalCallback(Expression resultValueB) throws LispException {
-                                            if (resultValueB instanceof ExpressionNumber) {
-                                                Expression result = valueA.atIndex((ExpressionNumber) resultValueB);
-                                                callback.evalCallback(result);
+                if (firstPair.right instanceof ExpressionPair) {
+                    ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                    firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                        @Override
+                        public void evalCallback(Expression resultValueA) throws LispException {
+                            if (resultValueA instanceof ISequence) {
+                                ISequence valueA = (ISequence) resultValueA;
+                                secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                    @Override
+                                    public void evalCallback(Expression resultValueB) throws LispException {
+                                        if (resultValueB instanceof ExpressionNumber) {
+                                            Expression result = valueA.atIndex((ExpressionNumber) resultValueB);
+                                            callback.evalCallback(result);
 
-                                            } else {
-                                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("number", secondPair.left.toString()));
-                                            }
+                                        } else {
+                                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("number", secondPair.left.toString()));
                                         }
-                                    });
-                                } else {
-                                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
-                                }
+                                    }
+                                });
+                            } else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("sequence", firstPair.left.toString()));
                             }
-                        });
-                    } else {
-                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                    }
+                        }
+                    });
+                } else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
             }
         });
 

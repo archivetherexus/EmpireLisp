@@ -25,7 +25,7 @@ public class ExpressionLambda extends Expression implements IApplicable {
             ExpressionPair pair = (ExpressionPair) argumentList;
             if (pair.left instanceof ExpressionSymbol) {
                 this.arguments.add(((ExpressionSymbol) pair.left).symbol);
-            } else if (!pair.isNil()){
+            } else if (!pair.isNil()) {
                 throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
             }
             if (pair.right instanceof ExpressionPair) {
@@ -95,7 +95,6 @@ public class ExpressionLambda extends Expression implements IApplicable {
                     } else {
                         int numberOfArguments = arguments.toList().size();
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(argumentsExpected, numberOfArguments));
-
                     }
                 }
             });

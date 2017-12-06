@@ -6,5 +6,6 @@ package EmpireLisp;
  */
 public interface IEvaluator {
     boolean continueEvaluation();
+
     void stashEvaluation(Expression expression, Environment environment, IEvalCallback callback);
 }

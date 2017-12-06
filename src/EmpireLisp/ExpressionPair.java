@@ -72,8 +72,7 @@ public class ExpressionPair extends Expression implements ISequence {
             } else {
                 evaluator.stashEvaluation(this, environment, callback);
             }
-        }
-        else {
+        } else {
             throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
         }
     }
@@ -130,7 +129,7 @@ public class ExpressionPair extends Expression implements ISequence {
     public ExpressionNumber getLength() {
         Iterator i = iterator();
         int length = 0;
-        while(i.hasNext()) {
+        while (i.hasNext()) {
             i.next();
             length++;
         }
@@ -142,7 +141,7 @@ public class ExpressionPair extends Expression implements ISequence {
         double at = index.number;
         Iterator<Expression> i = iterator();
         Expression value;
-        for(value = null; at >= 0 && i.hasNext(); at--) {
+        for (value = null; at >= 0 && i.hasNext(); at--) {
             value = i.next();
         }
         if (at != -1 || value == null) {
@@ -181,8 +180,7 @@ public class ExpressionPair extends Expression implements ISequence {
                 if (theirIterator.hasNext()) {
                     head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
                     head = (ExpressionPair) head.right;
-                }
-                else {
+                } else {
                     break;
                 }
             }
