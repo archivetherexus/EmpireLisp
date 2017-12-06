@@ -27,7 +27,7 @@ public class Main {
         Environment environment = Environment.makeStandardEnvironment();
         environment.setVariable("print", new ExpressionPrimitive() {
             @Override
-            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
                 if (arguments instanceof ExpressionPair) {
                     ExpressionPair firstPair = (ExpressionPair) arguments;
                     firstPair.left.eval(evaluator, environment, new IEvalCallback() {
@@ -50,7 +50,7 @@ public class Main {
 
         environment.setVariable("exit", new ExpressionPrimitive() {
             @Override
-            public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
                 running = false;
                 callback.evalCallback(Environment.nilValue);
             }

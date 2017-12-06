@@ -22,7 +22,7 @@ public abstract class ProcedureBinaryOperator<T1 extends Expression, T2 extends 
 
     @SuppressWarnings("unchecked")
     @Override
-    public void apply(IEvaluator evaluator, Environment environment, Expression arguments, IEvalCallback callback) throws LispException {
+    public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
         if (arguments instanceof ExpressionPair) {
             ExpressionPair firstPair = (ExpressionPair) arguments;
 

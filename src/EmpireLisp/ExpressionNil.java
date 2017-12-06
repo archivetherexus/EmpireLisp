@@ -5,7 +5,12 @@ package EmpireLisp;
  * @date 11/28/17
  */
 @SuppressWarnings("JavaDoc")
-public class ExpressionNil extends Expression {
+public class ExpressionNil extends ExpressionPair {
+
+    public ExpressionNil() {
+        super(null, null);
+    }
+
     @Override
     public String toString() {
         return "nil";

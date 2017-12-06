@@ -53,23 +53,28 @@ public class ExpressionPair extends Expression implements ISequence {
     @Override
     public void eval(IEvaluator evaluator, Environment environment, IEvalCallback callback) throws LispException {
         Expression operator = this.left;
-        Expression operand = this.right;
+        if (this.right instanceof ExpressionPair) {
+            ExpressionPair operand = (ExpressionPair) this.right;
 
-        // Evaluate the operator. //
-        if (evaluator.continueEvaluation()) {
-            operator.eval(evaluator, environment, new IEvalCallback() {
-                @Override
-                public void evalCallback(Expression operator) throws LispException {
-                    if (operator instanceof IApplicable) {
-                        ((IApplicable) operator).apply(evaluator, environment, operand, callback);
+            // Evaluate the operator. //
+            if (evaluator.continueEvaluation()) {
+                operator.eval(evaluator, environment, new IEvalCallback() {
+                    @Override
+                    public void evalCallback(Expression operator) throws LispException {
+                        if (operator instanceof IApplicable) {
+                            ((IApplicable) operator).apply(evaluator, environment, operand, callback);
 
-                    } else {
-                        throw new LispException(LispException.ErrorType.NOT_APPLICABLE, "\"" + operator.toString() + "\" is not applicable");
+                        } else {
+                            throw new LispException(LispException.ErrorType.NOT_APPLICABLE, "\"" + operator.toString() + "\" is not applicable");
+                        }
                     }
-                }
-            });
-        } else {
-            evaluator.stashEvaluation(this, environment, callback);
+                });
+            } else {
+                evaluator.stashEvaluation(this, environment, callback);
+            }
+        }
+        else {
+            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
         }
     }
 
@@ -94,7 +99,7 @@ public class ExpressionPair extends Expression implements ISequence {
         ExpressionPair pair = this;
         class Head {
             ExpressionPair value = pair;
-            boolean end = false;
+            boolean end = pair.isNil();
         }
         Head head = new Head();
         return new Iterator<Expression>() {
@@ -108,10 +113,12 @@ public class ExpressionPair extends Expression implements ISequence {
                 Expression value = head.value.left;
                 if (head.value.right instanceof ExpressionPair) {
                     head.value = (ExpressionPair) head.value.right;
+                    if (head.value.isNil()) {
+                        head.end = true;
+                    }
                     return value;
-                } else if (head.value.right.isNil()) {
-                    head.end = true;
-                    return value;
+                } else if (head.value.isNil()) {
+                    return head.value;
                 } else {
                     throw new RuntimeException("Invalid list structure!");
                 }
@@ -146,45 +153,41 @@ public class ExpressionPair extends Expression implements ISequence {
 
     @Override
     public ISequence concatenate(ISequence other) {
-        if (other instanceof ExpressionPair) {
-            Iterator<Expression> myIterator = iterator();
-            Iterator<Expression> theirIterator = ((ExpressionPair)other).iterator();
+        Iterator<Expression> myIterator = iterator();
+        Iterator<Expression> theirIterator = other.iterator();
 
-            ExpressionPair head = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-            ExpressionPair result = head;
+        ExpressionPair head = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+        ExpressionPair result = head;
 
-            if (myIterator.hasNext()) {
-                while (true) {
-                    head.left = myIterator.next();
-                    if (myIterator.hasNext()) {
-                        head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                        head = (ExpressionPair) head.right;
-                    } else {
-                        break;
-                    }
+        if (myIterator.hasNext()) {
+            while (true) {
+                head.left = myIterator.next();
+                if (myIterator.hasNext()) {
+                    head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                    head = (ExpressionPair) head.right;
+                } else {
+                    break;
                 }
             }
+        }
 
-            if (theirIterator.hasNext()) {
-                if (head.left != Environment.nilValue) {
+        if (theirIterator.hasNext()) {
+            if (head.left != Environment.nilValue) {
+                head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
+                head = (ExpressionPair) head.right;
+            }
+            while (true) {
+                head.left = theirIterator.next();
+                if (theirIterator.hasNext()) {
                     head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
                     head = (ExpressionPair) head.right;
                 }
-                while (true) {
-                    head.left = theirIterator.next();
-                    if (theirIterator.hasNext()) {
-                        head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                        head = (ExpressionPair) head.right;
-                    }
-                    else {
-                        break;
-                    }
+                else {
+                    break;
                 }
             }
-
-            return result;
         }
 
-        return null; // TODO: Find something smart here...
+        return result;
     }
 }

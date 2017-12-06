@@ -21,19 +21,17 @@ public class ExpressionLambda extends Expression implements IApplicable {
         this.body = bodyList.toList();
         this.arguments = new ArrayList<>();
 
-        if (argumentList instanceof ExpressionPair) {
-            while (true) {
-                ExpressionPair pair = (ExpressionPair) argumentList;
-                if (pair.left instanceof ExpressionSymbol) {
-                    this.arguments.add(((ExpressionSymbol) pair.left).symbol);
-                } else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
-                }
-                if (pair.right instanceof ExpressionPair) {
-                    argumentList = pair.right;
-                } else {
-                    break;
-                }
+        while (true) {
+            ExpressionPair pair = (ExpressionPair) argumentList;
+            if (pair.left instanceof ExpressionSymbol) {
+                this.arguments.add(((ExpressionSymbol) pair.left).symbol);
+            } else if (!pair.isNil()){
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
+            }
+            if (pair.right instanceof ExpressionPair) {
+                argumentList = pair.right;
+            } else {
+                break;
             }
         }
     }
@@ -55,7 +53,7 @@ public class ExpressionLambda extends Expression implements IApplicable {
     }
 
     @Override
-    public void apply(IEvaluator evaluator, Environment environment, Expression uncheckedArguments, IEvalCallback callback) throws LispException {
+    public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
         Environment lambdaEnvironment = new Environment(this.parentEnvironment);
         final int argumentsExpected = this.arguments.size();
 
@@ -76,9 +74,9 @@ public class ExpressionLambda extends Expression implements IApplicable {
         }
         OnDoneCallback done = new OnDoneCallback();
 
-        if (uncheckedArguments instanceof ExpressionPair) {
-            Iterator<Expression> iterator1 = ((ExpressionPair) uncheckedArguments).iterator();
-            Iterator<String> iterator2 = arguments.iterator();
+        Iterator<Expression> iterator1 = arguments.iterator();
+        Iterator<String> iterator2 = this.arguments.iterator();
+        if (iterator1.hasNext()) {
             iterator1.next().eval(evaluator, environment, new IEvalCallback() {
                 @Override
                 public void evalCallback(Expression result) throws LispException {
@@ -90,20 +88,19 @@ public class ExpressionLambda extends Expression implements IApplicable {
                             if (!iterator2.hasNext()) {
                                 done.callback();
                             } else {
-                                int numberOfArguments = ((ExpressionPair) uncheckedArguments).toList().size();
+                                int numberOfArguments = arguments.toList().size();
                                 throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(argumentsExpected, numberOfArguments));
                             }
                         }
                     } else {
-                        int numberOfArguments = ((ExpressionPair) uncheckedArguments).toList().size();
+                        int numberOfArguments = arguments.toList().size();
                         throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(argumentsExpected, numberOfArguments));
+
                     }
                 }
             });
-        } else if (uncheckedArguments.isNil()) {
-            done.callback();
         } else {
-            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+            done.callback();
         }
     }
 }
