@@ -13,10 +13,10 @@ import java.util.Map;
  * An Environment contains a HashMap of Expressions that can be accessed through a string value.
  * An Environment can also contain a parent Environment which is used for
  * when a variable is not found in the child Environment.
- *
+ * <p>
  * This class also a makeStandardEnvironment() method that will create an environment
  * containing all the standard procedures and constants.
- *
+ * <p>
  * The class also contains a standardEnvironmentTest() method that can be used to check the sanity of all the
  * procedures (that implement IUnitTestable) defined in makeStandardEnvironment().
  *
@@ -47,7 +47,8 @@ public class Environment {
 
     /**
      * An abstraction layer for the internal HashMap.
-     * @param name The name of the variable you want to set.
+     *
+     * @param name  The name of the variable you want to set.
      * @param value The new value of the variable.
      */
     @SuppressWarnings("WeakerAccess")
@@ -59,9 +60,10 @@ public class Environment {
      * An abstraction layer for the internal HashMap.
      * OBS: If there is a parent Environment and the value is not found by it's name
      * in the HasMap it will be searched for in the parent Environment.
+     *
      * @param name The name of the variable to "find"
      * @return The found value.
-     * @throws LispException Throws an "unbound-variable" error if the value is not found.
+     * @throws LispException Throws a "unbound-variable" error if the value is not found.
      */
     @SuppressWarnings("WeakerAccess")
     public Expression getVariable(String name) throws LispException {
@@ -79,6 +81,7 @@ public class Environment {
 
     /**
      * Creates and populates an environment with all the standard procedures and constants.
+     *
      * @return The created standard environment.
      */
     public static Environment makeStandardEnvironment() {
@@ -117,6 +120,7 @@ public class Environment {
 
         abstract class SafeUntypedBinaryOperator extends ExpressionPrimitive implements IUnitTestable {
             abstract Expression operate(Expression a, Expression B);
+
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
                 firstPair.left.eval(evaluator, environment, new IEvalCallback() {
@@ -147,6 +151,7 @@ public class Environment {
 
         abstract class SafeUntypedUnaryOperator extends ExpressionPrimitive implements IUnitTestable {
             abstract Expression operate(Expression value);
+
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
                 firstPair.left.eval(evaluator, environment, new IEvalCallback() {
@@ -852,7 +857,8 @@ public class Environment {
 
     /**
      * Runs two expressions in the current environment and checks if they are equal.
-     * @param what The first expression to evaluate.
+     *
+     * @param what   The first expression to evaluate.
      * @param expect The second expression to evaluate.
      * @return True if the expressions evaluated values are equal.
      */
@@ -910,7 +916,8 @@ public class Environment {
      * The tests uses the makeStandardEnvironment() method to create an environment.
      * All IUnitTestable values in this environment are then tested using selfTest().
      * If a selfTest() returns false an exception will be thrown.
-     * @throws LispException Will throw an "unit-test-failure" error if some unit test returns false.
+     *
+     * @throws LispException Will throw a "unit-test-failure" error if some unit test returns false.
      */
     static public void standardEnvironmentTest() throws LispException {
         Environment standardEnvironment = makeStandardEnvironment();

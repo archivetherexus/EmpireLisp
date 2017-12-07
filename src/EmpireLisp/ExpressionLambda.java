@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * A lambda as an Expression.
+ *
  * @author Tyrerexus
  * @date 11/20/17
  */

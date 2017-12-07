@@ -1,6 +1,8 @@
 package EmpireLisp;
 
 /**
+ * A symbol as an Expression.
+ *
  * @author Tyrerexus
  * @date 11/20/17
  */

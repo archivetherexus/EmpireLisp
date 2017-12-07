@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.Scanner;
 
 /**
+ * This is an example of how to use this interpreter.
+ * It contains a basic REPL.
+ *
  * @author Tyrerexus
  * @date 11/20/17
  */
@@ -15,39 +18,40 @@ public class Main {
     @SuppressWarnings("Convert2Lambda")
     public static void main(String[] args) throws UnsupportedEncodingException, LispException {
 
-
+        /* Run some unit-tests. */
         Parser.readTokenTest();
         Parser.parseExpressionTest();
         Environment.standardEnvironmentTest();
 
+        /* Start the REPL. */
         Scanner scanner = new Scanner(System.in);
+        REPL(scanner);
 
+    }
 
+    static void REPL(Scanner scanner) {
         Parser parser = new Parser();
         Environment environment = Environment.makeStandardEnvironment();
+
+        /* Print will be our interface to the outer-world. */
         environment.setVariable("print", new ExpressionPrimitive() {
             @Override
-            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
-                if (arguments instanceof ExpressionPair) {
-                    ExpressionPair firstPair = (ExpressionPair) arguments;
-                    firstPair.left.eval(evaluator, environment, new IEvalCallback() {
-                        @Override
-                        public void evalCallback(Expression result) throws LispException {
-                            if (result instanceof ExpressionString) {
-                                System.out.println(((ExpressionString) result).string);
-                                callback.evalCallback(Environment.nilValue);
-                            } else {
-                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("string", firstPair.left.toString()));
-                            }
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                    @Override
+                    public void evalCallback(Expression result) throws LispException {
+                        if (result instanceof ExpressionString) {
+                            System.out.println(((ExpressionString) result).string);
+                            callback.evalCallback(Environment.nilValue);
+                        } else {
+                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("string", firstPair.left.toString()));
                         }
-                    });
-                }
-                else {
-                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
-                }
+                    }
+                });
             }
         });
 
+        /* Allow us to exit this REPL. */
         environment.setVariable("exit", new ExpressionPrimitive() {
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
@@ -66,13 +70,12 @@ public class Main {
 
             @Override
             public boolean continueEvaluation() {
-                //return maxEvaluations-- > 0;
-                return true;
+                return maxEvaluations-- > 0;
             }
 
             @Override
             public void stashEvaluation(Expression expression, Environment environment, IEvalCallback callback) {
-                System.out.println("Stashing: " + expression);
+                //System.out.println("Stashing: " + expression);
                 expressionStash = expression;
                 environmentStash = environment;
                 callbackStash = callback;
@@ -114,7 +117,7 @@ public class Main {
                     }
                 }
                 else {
-                    System.err.println("parseExpression() returned null!");
+                    throw new RuntimeException("parseExpression() returned null!");
                 }
             }
             catch (LispException e) {

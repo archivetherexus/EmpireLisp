@@ -11,6 +11,7 @@ public interface IEvalCallback {
 
     /**
      * This method is called when an evaluation has been completed.
+     *
      * @param result The result of the evaluation
      * @throws LispException If an error occurred.
      */

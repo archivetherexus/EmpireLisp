@@ -3,6 +3,8 @@ package EmpireLisp;
 import java.util.Iterator;
 
 /**
+ * A string value as an Expression.
+ *
  * @author Tyrerexus
  * @date 11/24/17
  */

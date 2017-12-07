@@ -1,6 +1,8 @@
 package EmpireLisp;
 
 /**
+ * The nil value as an Expression.
+ *
  * @author Tyrerexus
  * @date 11/28/17
  */

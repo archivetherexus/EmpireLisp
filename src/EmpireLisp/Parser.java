@@ -15,8 +15,18 @@ import java.util.Iterator;
 @SuppressWarnings("JavaDoc")
 public class Parser {
 
+    /**
+     * How many parentheses have been read?
+     */
     private int parenthesesCount = 0;
 
+    /**
+     * The tokenizer of the parser. Reads token by token from the stream.
+     *
+     * @param stream The stream to read from.
+     * @return The token read. Returns null if no tokens are left on the stream.
+     * @throws LispException Can throw a "unterminated-string" error if necessary.
+     */
     @SuppressWarnings("WeakerAccess")
     public String readToken(PushbackInputStream stream) throws LispException {
         try {
@@ -74,6 +84,14 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses an expression by reading tokens from readToken() and converting these tokens
+     * from their string representation into an expression.
+     *
+     * @param stream The stream that will be passed onto readToken()
+     * @return The parsed expression.
+     * @throws LispException May throw a "missing-parentheses" error if necessary.
+     */
     public Expression parseExpression(PushbackInputStream stream) throws LispException {
         Expression result;
         String token = readToken(stream);
@@ -117,6 +135,13 @@ public class Parser {
         return result;
     }
 
+    /**
+     * Helper method:
+     * Converts a string into a PushbackInputStream that can be used by parseExpression() and readToken().
+     *
+     * @param string The string to convert.
+     * @return The new stream.
+     */
     public static PushbackInputStream fromString(String string) {
         try {
             return new PushbackInputStream(new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8.name())));
@@ -126,6 +151,15 @@ public class Parser {
         }
     }
 
+    /**
+     * This tests the tokenizer by creating a stream from testString.
+     * And then pulling out tokens using readToken() while making sure that it matches the expectedList.
+     * It will throw an exception if the expectedList does not match the tokens extracted by using readToken().
+     *
+     * @param testString   The string to test.
+     * @param expectedList The expected "tokenization" of that list.
+     * @throws LispException May throw a "unit-test-failure" error if the lists do not match.
+     */
     private static void readTokenTestList(String testString, ArrayList<String> expectedList) throws LispException {
 
         ArrayList<String> resultList = new ArrayList<>();
@@ -156,6 +190,12 @@ public class Parser {
         }
     }
 
+    /**
+     * Tests if the tokenizer works properly.
+     * It does so by using the private method readTokenTestList().
+     *
+     * @throws LispException May throw a "unit-test-failure" error if a unit-test fails.
+     */
     public static void readTokenTest() throws LispException {
         readTokenTestList("(hello world (how are you?))", new ArrayList<String>() {{
             add("(");
@@ -194,17 +234,20 @@ public class Parser {
         }});
     }
 
-    public static void parseExpressionTest() {
-        try {
-            String expectedString = "(123.0 . ((world . nil) . nil))";
-            Parser parser = new Parser();
-            PushbackInputStream stream = Parser.fromString("(123 (WoRlD))");
+    /**
+     * Tests if the parseExpression() method is sane.
+     * It does so by running parseExpression() on a string to get an Expression.
+     * It then uses this Expression to run toString() on it to check against another string.
+     *
+     * @throws LispException May throw a "unit-test-failure" error if a unit-test fails.
+     */
+    public static void parseExpressionTest() throws LispException {
+        String expectedString = "(123.0 . ((world . nil) . nil))";
+        Parser parser = new Parser();
+        PushbackInputStream stream = Parser.fromString("(123 (WoRlD))");
 
-            if (!expectedString.equals(parser.parseExpression(stream).toString())) {
-                throw new LispException(LispException.ErrorType.UNIT_TEST_FAILURE, "Parser.parseExpressionTest() failed. Result didn't match the expected string!");
-            }
-        } catch (LispException e) {
-            e.printStackTrace();
+        if (!expectedString.equals(parser.parseExpression(stream).toString())) {
+            throw new LispException(LispException.ErrorType.UNIT_TEST_FAILURE, "Parser.parseExpressionTest() failed. Result didn't match the expected string!");
         }
     }
 }

@@ -1,6 +1,9 @@
 package EmpireLisp;
 
 /**
+ * A typed binary operator. It will check that the arguments given when apply() is called match the requested type.
+ * A binary operator takes in two arguments.
+ *
  * @author Tyrerexus
  * @date 11/22/17
  */
@@ -14,10 +17,30 @@ public abstract class TypedBinaryOperator<T1 extends Expression, T2 extends Expr
         this.type2 = type2;
     }
 
+    /**
+     * Operates on two values that are of the requested type. No additional checks should be needed.
+     * All checking is done by apply().
+     *
+     * @param arg1 The first argument.
+     * @param arg2 The second argument.
+     * @return The result of operating on arg1 and arg2.
+     */
     public abstract Expression operate(T1 arg1, T2 arg2);
 
+    /**
+     * This method is called when there is an "arity-miss-match" error.
+     * It should return the name of the requested type for arg1.
+     *
+     * @return The name of the requested type for arg1.
+     */
     public abstract String getType1Name();
 
+    /**
+     * This method is called when there is an "arity-miss-match" error.
+     * It should return the name of the requested type for arg2.
+     *
+     * @return The name of the requested type for arg2.
+     */
     public abstract String getType2Name();
 
     @SuppressWarnings("unchecked")

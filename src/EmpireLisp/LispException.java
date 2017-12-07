@@ -1,12 +1,18 @@
 package EmpireLisp;
 
 /**
+ * The main exception class of this interpreter.
+ * This class also contains standard error messages that can be used for error-reporting.
+ *
  * @author Tyrerexus
  * @date 11/21/17
  */
 @SuppressWarnings("JavaDoc")
 public class LispException extends Exception {
 
+    /**
+     * This class contains some standard error-messages that can be used for error-reporting.
+     */
     @SuppressWarnings("WeakerAccess")
     public static class ErrorMessages {
         public static String ARGUMENTS_MUST_BE_IN_LIST = "Function arguments must be in a valid list.";
@@ -20,6 +26,9 @@ public class LispException extends Exception {
         }
     }
 
+    /**
+     * All possible error types that can be thrown.
+     */
     public enum ErrorType {
         ARITY_MISS_MATCH("Arity miss-match"),
         PARSE_ERROR("Parse error"),
