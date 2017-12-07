@@ -100,22 +100,29 @@ public class Parser {
             throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing right-angel parentheses!");
         } else if (token.equals("(")) {
             parenthesesCount++;
+            ListWriter list = new ListWriter();
+            for (Expression e = parseExpression(stream); e != null; e = parseExpression(stream)) {
+                list.push(e);
+            }
+            result = list.getResult();
+            /*
             Expression expression = parseExpression(stream);
             if (expression != null) {
-                result = new ExpressionPair(expression, Environment.nilValue);
-                ExpressionPair head = (ExpressionPair) result;
+                ListWriter list = new ListWriter();
+                list.push(expression);
                 while (true) {
                     Expression expression2 = parseExpression(stream);
                     if (expression2 == null) {
                         break;
                     } else {
-                        head.right = new ExpressionPair(expression2, Environment.nilValue);
-                        head = (ExpressionPair) head.right;
+                        list.push(expression2);
                     }
                 }
+                result = list.getResult();
             } else {
                 return Environment.nilValue;
             }
+            */
         } else if (token.equals(")")) {
             if (parenthesesCount > 0) {
                 parenthesesCount--;

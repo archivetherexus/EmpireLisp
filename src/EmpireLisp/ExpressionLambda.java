@@ -18,11 +18,22 @@ public class ExpressionLambda extends Expression implements IApplicable {
     private Environment parentEnvironment;
 
     @SuppressWarnings("WeakerAccess")
-    public ExpressionLambda(Environment environment, Expression argumentList, ExpressionPair bodyList) throws LispException {
+    public ExpressionLambda(Environment environment, ExpressionPair argumentList, ExpressionPair bodyList) throws LispException {
         this.parentEnvironment = environment;
         this.body = bodyList.toList();
         this.arguments = new ArrayList<>();
 
+        Iterator<Expression> i = argumentList.iterator();
+        while (i.hasNext()) {
+            Expression unchecked = i.next();
+            if (unchecked instanceof ExpressionSymbol) {
+                this.arguments.add(((ExpressionSymbol) unchecked).symbol);
+            } else {
+                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
+            }
+        }
+
+        /*
         while (true) {
             ExpressionPair pair = (ExpressionPair) argumentList;
             if (pair.left instanceof ExpressionSymbol) {
@@ -36,6 +47,7 @@ public class ExpressionLambda extends Expression implements IApplicable {
                 break;
             }
         }
+        */
     }
 
 

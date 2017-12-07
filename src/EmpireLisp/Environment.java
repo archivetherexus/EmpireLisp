@@ -34,7 +34,7 @@ public class Environment {
     public static Expression falseValue = new ExpressionPair(null, null);
 
     @SuppressWarnings("WeakerAccess")
-    public static Expression nilValue = new ExpressionNil();
+    public static ExpressionNil nilValue = new ExpressionNil();
 
     private Map<String, Expression> map = new HashMap<>();
 
@@ -491,11 +491,15 @@ public class Environment {
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
                 if (firstPair.right instanceof ExpressionPair) {
-                    Expression argumentList = firstPair.left;
                     ExpressionPair bodyList = (ExpressionPair) firstPair.right;
-                    callback.evalCallback(new ExpressionLambda(environment, argumentList, bodyList));
+                    if (firstPair.left instanceof ExpressionPair) {
+                        ExpressionPair argumentList = (ExpressionPair) firstPair.left;
+                        callback.evalCallback(new ExpressionLambda(environment, argumentList, bodyList));
+                    } else {
+                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("pair", firstPair.right.toString()));
+                    }
                 } else {
-                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("pair", firstPair.right.toString()));
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                 }
             }
         });
@@ -544,23 +548,17 @@ public class Environment {
                                     @Override
                                     public void evalCallback(Expression sequenceResult) throws LispException {
                                         if (sequenceResult instanceof ISequence) {
-                                            ExpressionPair listResult = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                                            class Head {
-                                                ExpressionPair value = listResult;
-                                            }
-                                            Head head = new Head();
+                                            ListWriter list = new ListWriter();
                                             Iterator<Expression> iterator = ((ISequence) sequenceResult).iterator();
                                             if (iterator.hasNext()) {
                                                 function.apply(evaluator, environment, new ExpressionPair(iterator.next(), Environment.nilValue), new IEvalCallback() {
                                                     @Override
                                                     public void evalCallback(Expression result) throws LispException {
-                                                        head.value.left = result;
+                                                        list.push(result);
                                                         if (iterator.hasNext()) {
-                                                            head.value.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                                                            head.value = (ExpressionPair) head.value.right;
                                                             function.apply(evaluator, environment, new ExpressionPair(iterator.next(), Environment.nilValue), this);
                                                         } else {
-                                                            callback.evalCallback(listResult);
+                                                            callback.evalCallback(list.getResult());
                                                         }
                                                     }
                                                 });

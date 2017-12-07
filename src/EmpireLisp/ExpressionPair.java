@@ -98,28 +98,26 @@ public class ExpressionPair extends Expression implements ISequence {
     @SuppressWarnings("WeakerAccess")
     public Iterator<Expression> iterator() {
         ExpressionPair pair = this;
-        class Head {
-            ExpressionPair value = pair;
-            boolean end = pair.isNil();
-        }
-        Head head = new Head();
         return new Iterator<Expression>() {
+            ExpressionPair head = pair;
+            boolean end = pair.isNil();
+
             @Override
             public boolean hasNext() {
-                return !head.end;
+                return !end;
             }
 
             @Override
             public Expression next() {
-                Expression value = head.value.left;
-                if (head.value.right instanceof ExpressionPair) {
-                    head.value = (ExpressionPair) head.value.right;
-                    if (head.value.isNil()) {
-                        head.end = true;
+                Expression value = head.left;
+                if (head.right instanceof ExpressionPair) {
+                    head = (ExpressionPair) head.right;
+                    if (head.isNil()) {
+                        end = true;
                     }
                     return value;
-                } else if (head.value.isNil()) {
-                    return head.value;
+                } else if (head.isNil()) {
+                    return head;
                 } else {
                     throw new RuntimeException("Invalid list structure!");
                 }
@@ -156,38 +154,16 @@ public class ExpressionPair extends Expression implements ISequence {
     public ISequence concatenate(ISequence other) {
         Iterator<Expression> myIterator = iterator();
         Iterator<Expression> theirIterator = other.iterator();
+        ListWriter list = new ListWriter();
 
-        ExpressionPair head = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-        ExpressionPair result = head;
-
-        if (myIterator.hasNext()) {
-            while (true) {
-                head.left = myIterator.next();
-                if (myIterator.hasNext()) {
-                    head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                    head = (ExpressionPair) head.right;
-                } else {
-                    break;
-                }
-            }
+        while (myIterator.hasNext()) {
+            list.push(myIterator.next());
         }
 
-        if (theirIterator.hasNext()) {
-            if (head.left != Environment.nilValue) {
-                head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                head = (ExpressionPair) head.right;
-            }
-            while (true) {
-                head.left = theirIterator.next();
-                if (theirIterator.hasNext()) {
-                    head.right = new ExpressionPair(Environment.nilValue, Environment.nilValue);
-                    head = (ExpressionPair) head.right;
-                } else {
-                    break;
-                }
-            }
+        while (theirIterator.hasNext()) {
+            list.push(theirIterator.next());
         }
 
-        return result;
+        return list.getResult();
     }
 }
