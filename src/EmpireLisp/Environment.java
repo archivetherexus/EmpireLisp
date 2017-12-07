@@ -10,6 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * An Environment contains a HashMap of Expressions that can be accessed through a string value.
+ * An Environment can also contain a parent Environment which is used for
+ * when a variable is not found in the child Environment.
+ *
+ * This class also a makeStandardEnvironment() method that will create an environment
+ * containing all the standard procedures and constants.
+ *
+ * The class also contains a standardEnvironmentTest() method that can be used to check the sanity of all the
+ * procedures (that implement IUnitTestable) defined in makeStandardEnvironment().
+ *
  * @author Tyrerexus
  * @date 11/20/17
  */
@@ -35,6 +45,24 @@ public class Environment {
         this.parent = parent;
     }
 
+    /**
+     * An abstraction layer for the internal HashMap.
+     * @param name The name of the variable you want to set.
+     * @param value The new value of the variable.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void setVariable(String name, Expression value) {
+        map.put(name, value);
+    }
+
+    /**
+     * An abstraction layer for the internal HashMap.
+     * OBS: If there is a parent Environment and the value is not found by it's name
+     * in the HasMap it will be searched for in the parent Environment.
+     * @param name The name of the variable to "find"
+     * @return The found value.
+     * @throws LispException Throws an "unbound-variable" error if the value is not found.
+     */
     @SuppressWarnings("WeakerAccess")
     public Expression getVariable(String name) throws LispException {
         Expression result = map.get(name);
@@ -49,24 +77,144 @@ public class Environment {
         }
     }
 
+    /**
+     * Creates and populates an environment with all the standard procedures and constants.
+     * @return The created standard environment.
+     */
     public static Environment makeStandardEnvironment() {
         Environment environment = new Environment(null);
+
+        /* Constants non-procedures: */
 
         environment.setVariable("true", trueValue);
         environment.setVariable("else", trueValue);
         environment.setVariable("false", falseValue);
         environment.setVariable("nil", nilValue);
 
-        abstract class SafeProcedureBinaryOperator<T1 extends Expression, T2 extends Expression> extends ProcedureBinaryOperator<T1, T2> implements IUnitTestable {
-            SafeProcedureBinaryOperator(Class<T1> type1, Class<T2> type2) {
+
+        /* Operator classes: */
+
+        /* Naming convention for the operator classes:
+         * Add a "Safe" prefix if the class extends IUnitTestable
+         * Then use "Typed" if the class checks that the arguments are correct, else use "Untyped".
+         * Then use "Unary, Binary, Ternary, etc..." depending on how many arguments the class takes.
+         * Finally add an "Operator" suffix.
+         *
+         * Example:
+         * SafeTypedBinaryOperator
+         *     This means:
+         *     - The operator has a unit test.
+         *     - The operator checks the type.
+         *     - The operator takes two arguments.
+         *     - The operator is an... operator...
+         */
+
+        abstract class SafeTypedBinaryOperator<T1 extends Expression, T2 extends Expression> extends TypedBinaryOperator<T1, T2> implements IUnitTestable {
+            SafeTypedBinaryOperator(Class<T1> type1, Class<T2> type2) {
                 super(type1, type2);
+            }
+        }
+
+        abstract class SafeUntypedBinaryOperator extends ExpressionPrimitive implements IUnitTestable {
+            abstract Expression operate(Expression a, Expression B);
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                    @Override
+                    public void evalCallback(Expression valueA) throws LispException {
+                        if (firstPair.right instanceof ExpressionPair) {
+                            ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+
+                            if (!secondPair.left.isNil() && secondPair.right.isNil()) {
+                                secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                    @Override
+                                    public void evalCallback(Expression valueB) throws LispException {
+                                        callback.evalCallback(operate(valueA, valueB));
+                                    }
+                                });
+                            } else {
+                                int argsReceived = firstPair.toList().size();
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(2, argsReceived));
+                            }
+                        } else {
+                            throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                        }
+
+                    }
+                });
+            }
+        }
+
+        abstract class SafeUntypedUnaryOperator extends ExpressionPrimitive implements IUnitTestable {
+            abstract Expression operate(Expression value);
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                    @Override
+                    public void evalCallback(Expression valueA) throws LispException {
+                        if (firstPair.right.isNil()) {
+                            callback.evalCallback(operate(valueA));
+
+                        } else {
+                            int argsReceived = firstPair.toList().size();
+                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedAmountOfArguments(2, argsReceived));
+                        }
+
+                    }
+                });
             }
         }
 
         abstract class SafeExpressionPrimitive extends ExpressionPrimitive implements IUnitTestable {
         }
 
-        environment.setVariable("+", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+
+        /* Procedures: */
+
+        environment.setVariable("and", new SafeUntypedBinaryOperator() {
+            @Override
+            public Expression operate(Expression arg1, Expression arg2) {
+                return (!arg1.equals(falseValue)) && (!arg2.equals(falseValue)) ? trueValue : falseValue;
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(and true true)", "true") &&
+                        environment.evalTest("(and true false)", "false") &&
+                        environment.evalTest("(and false true)", "false") &&
+                        environment.evalTest("(and false false)", "false");
+            }
+        });
+
+        environment.setVariable("or", new SafeUntypedBinaryOperator() {
+            @Override
+            public Expression operate(Expression arg1, Expression arg2) {
+                return (!arg1.equals(falseValue)) | (!arg2.equals(falseValue)) ? trueValue : falseValue;
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(or true true)", "true") &&
+                        environment.evalTest("(or true false)", "true") &&
+                        environment.evalTest("(or false true)", "true") &&
+                        environment.evalTest("(or false false)", "false");
+            }
+        });
+
+        environment.setVariable("not", new SafeUntypedUnaryOperator() {
+            @Override
+            Expression operate(Expression value) {
+                return value.equals(falseValue) ? trueValue : falseValue;
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(not true)", "false") &&
+                        environment.evalTest("(not false)", "true");
+            }
+        });
+
+        environment.setVariable("+", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(+ 20 20)", "40") &&
@@ -89,7 +237,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("-", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("-", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(- 20 20)", "0");
@@ -111,7 +259,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("*", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("*", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(* 20 20)", "400");
@@ -133,7 +281,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("/", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("/", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(/ 20 20)", "1");
@@ -155,7 +303,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("remainder", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("remainder", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(remainder 20 20)", "0");
@@ -177,7 +325,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("=", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("=", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(= 2 2)", "true") &&
@@ -200,7 +348,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable(">", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable(">", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(> 2 2)", "false") &&
@@ -224,7 +372,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable(">=", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable(">=", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(>= 2 2)", "true") &&
@@ -248,7 +396,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("<", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("<", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(< 2 2)", "false") &&
@@ -272,7 +420,7 @@ public class Environment {
             }
         });
 
-        environment.setVariable("<=", new SafeProcedureBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
+        environment.setVariable("<=", new SafeTypedBinaryOperator<ExpressionNumber, ExpressionNumber>(ExpressionNumber.class, ExpressionNumber.class) {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(<= 2 2)", "true") &&
@@ -702,11 +850,12 @@ public class Environment {
         return environment;
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void setVariable(String name, Expression value) {
-        map.put(name, value);
-    }
-
+    /**
+     * Runs two expressions in the current environment and checks if they are equal.
+     * @param what The first expression to evaluate.
+     * @param expect The second expression to evaluate.
+     * @return True if the expressions evaluated values are equal.
+     */
     private boolean evalTest(String what, String expect) {
         try {
             String charset = StandardCharsets.UTF_8.name();
@@ -757,10 +906,14 @@ public class Environment {
         }
     }
 
+    /**
+     * The tests uses the makeStandardEnvironment() method to create an environment.
+     * All IUnitTestable values in this environment are then tested using selfTest().
+     * If a selfTest() returns false an exception will be thrown.
+     * @throws LispException Will throw an "unit-test-failure" error if some unit test returns false.
+     */
     static public void standardEnvironmentTest() throws LispException {
         Environment standardEnvironment = makeStandardEnvironment();
-        //standardEnvironment.evalTest("((lambda (x) x) 12)", "12");
-        standardEnvironment.evalTest("((lambda () 12))", "12");
         for (Map.Entry<String, Expression> values : standardEnvironment.map.entrySet()) {
             if (values.getValue() instanceof IUnitTestable) {
                 if (!((IUnitTestable) values.getValue()).selfTest(standardEnvironment)) {
