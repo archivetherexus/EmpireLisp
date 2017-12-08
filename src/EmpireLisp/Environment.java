@@ -31,7 +31,7 @@ public class Environment {
     public static Expression trueValue = new ExpressionNumber(1);
 
     @SuppressWarnings("WeakerAccess")
-    public static Expression falseValue = new ExpressionPair(null, null);
+    public static Expression falseValue = new ExpressionNumber(0);
 
     @SuppressWarnings("WeakerAccess")
     public static ExpressionNil nilValue = new ExpressionNil();
@@ -563,6 +563,9 @@ public class Environment {
                                                     }
                                                 });
                                             }
+                                            else {
+                                                callback.evalCallback(list.getResult());
+                                            }
                                         }
                                     }
                                 });
@@ -580,6 +583,66 @@ public class Environment {
             @Override
             public boolean selfTest(Environment environment) {
                 return environment.evalTest("(map (lambda (x) (+ 1 x)) (cons 1 (cons 2 (cons 3 nil))))", "(cons 2 (cons 3 (cons 4 nil)))");
+            }
+        });
+
+        environment.setVariable("filter", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                if (firstPair.right instanceof ExpressionPair) {
+                    ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                    firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                        @Override
+                        public void evalCallback(Expression functionResult) throws LispException {
+                            if (functionResult instanceof IApplicable) {
+                                IApplicable function = (IApplicable) functionResult;
+                                secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                    @Override
+                                    public void evalCallback(Expression sequenceResult) throws LispException {
+                                        if (sequenceResult instanceof ISequence) {
+                                            ListWriter list = new ListWriter();
+                                            Iterator<Expression> iterator = ((ISequence) sequenceResult).iterator();
+                                            if (iterator.hasNext()) {
+                                                class Value {
+                                                    Expression expression = iterator.next();
+                                                };
+                                                Value value = new Value();
+                                                function.apply(evaluator, environment, new ExpressionPair(value.expression, Environment.nilValue), new IEvalCallback() {
+                                                    @Override
+                                                    public void evalCallback(Expression result) throws LispException {
+                                                        if (result.isTrue()) {
+                                                            list.push(value.expression);
+                                                        }
+                                                        if (iterator.hasNext()) {
+                                                            value.expression = iterator.next();
+                                                            function.apply(evaluator, environment, new ExpressionPair(value.expression, Environment.nilValue), this);
+                                                        } else {
+                                                            callback.evalCallback(list.getResult());
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            else {
+                                                callback.evalCallback(list.getResult());
+                                            }
+                                        }
+                                    }
+                                });
+
+                            } else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("applicable", firstPair.left.toString()));
+                            }
+                        }
+                    });
+                } else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(filter (lambda (x) (= x true)) (cons true (cons false (cons true nil))))", "(cons true (cons true nil))") &&
+                        environment.evalTest("(filter (lambda (x) (= x false)) (cons true (cons false (cons true nil))))", "(cons false nil)");
             }
         });
 
@@ -663,6 +726,37 @@ public class Environment {
                 } else {
                     throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
                 }
+            }
+        });
+
+        environment.setVariable("list", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
+                Iterator<Expression> i = arguments.iterator();
+                ListWriter list = new ListWriter();
+
+                if (i.hasNext()) {
+                    i.next().eval(evaluator, environment, new IEvalCallback() {
+                        @Override
+                        public void evalCallback(Expression result) throws LispException {
+                            list.push(result);
+                            if (i.hasNext()) {
+                                i.next().eval(evaluator, environment, this);
+                            }
+                            else {
+                                callback.evalCallback(list.getResult());
+                            }
+                        }
+                    });
+                }
+                else {
+                    callback.evalCallback(list.getResult());
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(list (+ 1 2) (+ 3 4) (+ 5 6))", "(quote (3 7 11))");
             }
         });
 

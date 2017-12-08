@@ -105,24 +105,6 @@ public class Parser {
                 list.push(e);
             }
             result = list.getResult();
-            /*
-            Expression expression = parseExpression(stream);
-            if (expression != null) {
-                ListWriter list = new ListWriter();
-                list.push(expression);
-                while (true) {
-                    Expression expression2 = parseExpression(stream);
-                    if (expression2 == null) {
-                        break;
-                    } else {
-                        list.push(expression2);
-                    }
-                }
-                result = list.getResult();
-            } else {
-                return Environment.nilValue;
-            }
-            */
         } else if (token.equals(")")) {
             if (parenthesesCount > 0) {
                 parenthesesCount--;
