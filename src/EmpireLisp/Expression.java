@@ -2,6 +2,9 @@ package EmpireLisp;
 
 /**
  * The base class for all the values in this interpreter.
+ * <p>
+ * TODO: Fix the ExpressionPair.toString infinite recursion bug. Where the this.cdr = this
+ * TODO: Fix a way to serialize all expressions. Keep in mind that references must also be serializable...
  *
  * @author Tyrerexus
  * @date 11/20/17

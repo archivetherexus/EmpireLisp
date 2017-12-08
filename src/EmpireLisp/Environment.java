@@ -45,6 +45,28 @@ public class Environment {
         this.parent = parent;
     }
 
+    @SuppressWarnings("WeakerAccess")
+    public Map<String, Expression> recursiveVariableExists(String name) {
+        if (map.containsKey(name)) {
+            return map;
+        } else if (parent != null) {
+            return parent.recursiveVariableExists(name);
+        } else {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public void recursiveSetVariable(String name, Expression value) {
+        if (parent != null) {
+            Map<String, Expression> inMap = recursiveVariableExists(name);
+            if (inMap != null) {
+                inMap.put(name, value);
+            }
+        }
+        map.put(name, value);
+    }
+
     /**
      * An abstraction layer for the internal HashMap.
      *
@@ -562,8 +584,7 @@ public class Environment {
                                                         }
                                                     }
                                                 });
-                                            }
-                                            else {
+                                            } else {
                                                 callback.evalCallback(list.getResult());
                                             }
                                         }
@@ -605,7 +626,7 @@ public class Environment {
                                             if (iterator.hasNext()) {
                                                 class Value {
                                                     Expression expression = iterator.next();
-                                                };
+                                                }
                                                 Value value = new Value();
                                                 function.apply(evaluator, environment, new ExpressionPair(value.expression, Environment.nilValue), new IEvalCallback() {
                                                     @Override
@@ -621,8 +642,7 @@ public class Environment {
                                                         }
                                                     }
                                                 });
-                                            }
-                                            else {
+                                            } else {
                                                 callback.evalCallback(list.getResult());
                                             }
                                         }
@@ -742,14 +762,12 @@ public class Environment {
                             list.push(result);
                             if (i.hasNext()) {
                                 i.next().eval(evaluator, environment, this);
-                            }
-                            else {
+                            } else {
                                 callback.evalCallback(list.getResult());
                             }
                         }
                     });
-                }
-                else {
+                } else {
                     callback.evalCallback(list.getResult());
                 }
             }
@@ -825,6 +843,37 @@ public class Environment {
                         }
                     }
                 });
+            }
+        });
+
+        environment.setVariable("begin", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
+                Iterator<Expression> iterator = arguments.iterator();
+                class Result {
+                    Expression value = Environment.nilValue;
+                }
+                Result result = new Result();
+                if (iterator.hasNext()) {
+                    iterator.next().eval(evaluator, environment, new IEvalCallback() {
+                        @Override
+                        public void evalCallback(Expression evalResult) throws LispException {
+                            result.value = evalResult;
+                            if (iterator.hasNext()) {
+                                iterator.next().eval(evaluator, environment, this);
+                            } else {
+                                callback.evalCallback(result.value);
+                            }
+                        }
+                    });
+                } else {
+                    callback.evalCallback(result.value);
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(begin (+ 1 3) (* 2 2))", "4");
             }
         });
 
@@ -916,6 +965,98 @@ public class Environment {
             }
         });
 
+        environment.setVariable("let", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                if (firstPair.left instanceof ExpressionPair) {
+                    ExpressionPair bindings = (ExpressionPair) firstPair.left;
+
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ExpressionPair expressions = (ExpressionPair) firstPair.right;
+
+                        Iterator<Expression> bindingsIterator = bindings.iterator();
+                        Iterator<Expression> expressionIterator = expressions.iterator();
+
+                        Environment newEnvironment = new Environment(environment);
+
+                        /* Callback hell - incoming! */
+
+                        /* This callback is called when the ForEachBinding is done with its thing. */
+                        class OnDone {
+                            Expression result = Environment.nilValue;
+
+                            void done() throws LispException {
+                                if (expressionIterator.hasNext()) {
+                                    expressionIterator.next().eval(evaluator, newEnvironment, new IEvalCallback() {
+                                        @Override
+                                        public void evalCallback(Expression evalResult) throws LispException {
+                                            result = evalResult;
+                                            if (expressionIterator.hasNext()) {
+                                                expressionIterator.next().eval(evaluator, newEnvironment, this);
+                                            } else {
+                                                callback.evalCallback(result);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    callback.evalCallback(result);
+                                }
+                            }
+                        }
+                        OnDone onDone = new OnDone();
+
+                        /* This callback is called on each binding. */
+                        class ForEachBinding {
+                            ForEachBinding forEachBinding = this;
+
+                            public void handleBinding() throws LispException {
+                                if (bindingsIterator.hasNext()) {
+                                    Expression uncheckedBinding = bindingsIterator.next();
+                                    if (uncheckedBinding instanceof ExpressionPair) {
+                                        ExpressionPair binding = (ExpressionPair) uncheckedBinding;
+                                        if (binding.left instanceof ExpressionSymbol) {
+                                            ExpressionSymbol name = (ExpressionSymbol) binding.left;
+                                            if (binding.right instanceof ExpressionPair) {
+                                                ((ExpressionPair) binding.right).left.eval(evaluator, environment, new IEvalCallback() {
+                                                    @Override
+                                                    public void evalCallback(Expression result) throws LispException {
+                                                        newEnvironment.setVariable(name.symbol, result);
+                                                        forEachBinding.handleBinding();
+                                                    }
+                                                });
+                                            } else {
+                                                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                                            }
+                                        } else {
+                                            throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("symbol", binding.left.toString()));
+                                        }
+
+                                    } else {
+                                        throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("pair", uncheckedBinding.toString()));
+                                    }
+                                } else {
+                                    onDone.done();
+                                }
+                            }
+                        }
+
+                        /* Start the machinery. :3*/
+                        ForEachBinding forEachBinding = new ForEachBinding();
+                        forEachBinding.handleBinding();
+                    } else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                } else {
+                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("pair", firstPair.left.toString()));
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(let ((a 3)) a)", "3");
+            }
+        });
+
         environment.setVariable("define", new SafeExpressionPrimitive() {
             @Override
             public boolean selfTest(Environment environment) {
@@ -941,6 +1082,122 @@ public class Environment {
                 } else {
                     throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, "Define can only use symbols as keys.");
                 }
+            }
+        });
+
+        environment.setVariable("atom?", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
+                arguments.left.eval(evaluator, environment, new IEvalCallback() {
+                    @Override
+                    public void evalCallback(Expression value) throws LispException {
+                        boolean isTrue = !(value instanceof ExpressionPair) || value instanceof ExpressionNil;
+                        callback.evalCallback(isTrue ? Environment.trueValue : Environment.falseValue);
+                    }
+                });
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(atom? 3)", "true") &&
+                        environment.evalTest("(atom? (quote lol))", "true") &&
+                        environment.evalTest("(atom? (cons 1 2))", "false") &&
+                        environment.evalTest("(atom? nil)", "true");
+            }
+        });
+
+        environment.setVariable("set!", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                if (firstPair.left instanceof ExpressionSymbol) {
+                    ExpressionSymbol symbol = (ExpressionSymbol) firstPair.left;
+                    if (firstPair.right instanceof ExpressionPair) {
+                        ((ExpressionPair) firstPair.right).left.eval(evaluator, environment, new IEvalCallback() {
+                            @Override
+                            public void evalCallback(Expression result) throws LispException {
+                                environment.recursiveSetVariable(symbol.symbol, result);
+                                callback.evalCallback(result);
+                            }
+                        });
+                    } else {
+                        throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                    }
+                } else {
+                    throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, "Define can only use symbols as keys.");
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("((lambda () (set! hi 5) hi))", "5");
+            }
+        });
+
+        environment.setVariable("set-car!", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                if (firstPair.right instanceof ExpressionPair) {
+                    ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                    firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                        @Override
+                        public void evalCallback(Expression uncheckedPair) throws LispException {
+                            if (uncheckedPair instanceof ExpressionPair) {
+                                ExpressionPair pair = (ExpressionPair) uncheckedPair;
+
+                                secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                    @Override
+                                    public void evalCallback(Expression value) throws LispException {
+                                        pair.left = value;
+                                        callback.evalCallback(pair);
+                                    }
+                                });
+                            } else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("pair", uncheckedPair.toString()));
+                            }
+                        }
+                    });
+                } else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(set-car! (cons 1 2) 4)", "(cons 4 2)");
+            }
+        });
+
+        environment.setVariable("set-cdr!", new SafeExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
+                if (firstPair.right instanceof ExpressionPair) {
+                    ExpressionPair secondPair = (ExpressionPair) firstPair.right;
+                    firstPair.left.eval(evaluator, environment, new IEvalCallback() {
+                        @Override
+                        public void evalCallback(Expression uncheckedPair) throws LispException {
+                            if (uncheckedPair instanceof ExpressionPair) {
+                                ExpressionPair pair = (ExpressionPair) uncheckedPair;
+
+                                secondPair.left.eval(evaluator, environment, new IEvalCallback() {
+                                    @Override
+                                    public void evalCallback(Expression value) throws LispException {
+                                        pair.right = value;
+                                        callback.evalCallback(pair);
+                                    }
+                                });
+                            } else {
+                                throw new LispException(LispException.ErrorType.ARITY_MISS_MATCH, LispException.ErrorMessages.expectedType("pair", uncheckedPair.toString()));
+                            }
+                        }
+                    });
+                } else {
+                    throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, LispException.ErrorMessages.ARGUMENTS_MUST_BE_IN_LIST);
+                }
+            }
+
+            @Override
+            public boolean selfTest(Environment environment) {
+                return environment.evalTest("(set-cdr! (cons 4 1) 2)", "(cons 4 2)");
             }
         });
 
