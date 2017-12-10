@@ -30,11 +30,10 @@ public class Main {
     }
 
     static void REPL(Scanner scanner) {
-        Parser parser = new Parser();
-        Environment environment = Environment.makeStandardEnvironment();
+        ExampleEvaluator evaluator = new ExampleEvaluator(64);
 
         /* Print will be our interface to the outer-world. */
-        environment.setVariable("print", new ExpressionPrimitive() {
+        evaluator.environment.setVariable("print", new ExpressionPrimitive() {
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair firstPair, IEvalCallback callback) throws LispException {
                 firstPair.left.eval(evaluator, environment, new IEvalCallback() {
@@ -52,7 +51,7 @@ public class Main {
         });
 
         /* Allow us to exit this REPL. */
-        environment.setVariable("exit", new ExpressionPrimitive() {
+        evaluator.environment.setVariable("exit", new ExpressionPrimitive() {
             @Override
             public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
                 running = false;
@@ -60,64 +59,13 @@ public class Main {
             }
         });
 
-        class MainEvaluator implements IEvaluator {
-
-            private Expression expressionStash   = null;
-            private Environment environmentStash = null;
-            private IEvalCallback callbackStash  = null;
-
-            private int maxEvaluations = 1;
-
-            @Override
-            public boolean continueEvaluation() {
-                return maxEvaluations-- > 0;
-            }
-
-            @Override
-            public void stashEvaluation(Expression expression, Environment environment, IEvalCallback callback) {
-                //System.out.println("Stashing: " + expression);
-                expressionStash = expression;
-                environmentStash = environment;
-                callbackStash = callback;
-            }
-
-            private boolean hasStash() {
-                return expressionStash != null;
-            }
-
-            private void resumeEvaluation() throws LispException {
-                maxEvaluations = 1;
-                Expression expression = expressionStash;
-                Environment environment = environmentStash;
-                IEvalCallback callback = callbackStash;
-                expressionStash  = null;
-                environmentStash = null;
-                callbackStash    = null;
-                expression.eval(this, environment, callback);
-            }
-        }
-
-        MainEvaluator evaluator = new MainEvaluator();
-
         while (running) {
             try {
-                System.out.print("> ");
-                Expression read = parser.parseExpression(Parser.fromString(scanner.nextLine()));
-                if (read != null) {
-                    read.eval(evaluator, environment, new IEvalCallback() {
-                        @Override
-                        public void evalCallback(Expression result) throws LispException {
-                            if (!result.isNil()) {
-                                System.out.println(result);
-                            }
-                        }
-                    });
-                    while(evaluator.hasStash()) {
-                        evaluator.resumeEvaluation();
-                    }
-                }
-                else {
-                    throw new RuntimeException("parseExpression() returned null!");
+                if (evaluator.done()) {
+                    System.out.print("> ");
+                    evaluator.eval(scanner.nextLine());
+                } else {
+                    evaluator.run();
                 }
             }
             catch (LispException e) {
@@ -125,5 +73,4 @@ public class Main {
             }
         }
     }
-
 }
