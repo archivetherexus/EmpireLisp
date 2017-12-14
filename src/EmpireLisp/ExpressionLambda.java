@@ -1,8 +1,9 @@
 package EmpireLisp;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.*;
 
 /**
  * A lambda as an Expression.
@@ -19,6 +20,8 @@ public class ExpressionLambda extends Expression implements IApplicable {
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionLambda(Environment environment, ExpressionPair argumentList, ExpressionPair bodyList) throws LispException {
+        super();
+
         this.parentEnvironment = environment;
         this.body = bodyList.toList();
         this.arguments = new ArrayList<>();
@@ -32,24 +35,33 @@ public class ExpressionLambda extends Expression implements IApplicable {
                 throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
             }
         }
-
-        /*
-        while (true) {
-            ExpressionPair pair = (ExpressionPair) argumentList;
-            if (pair.left instanceof ExpressionSymbol) {
-                this.arguments.add(((ExpressionSymbol) pair.left).symbol);
-            } else if (!pair.isNil()) {
-                throw new LispException(LispException.ErrorType.INVALID_ARGUMENTS, "Only symbols are allowed in the argument value!");
-            }
-            if (pair.right instanceof ExpressionPair) {
-                argumentList = pair.right;
-            } else {
-                break;
-            }
-        }
-        */
     }
 
+
+    @Override
+    public void serializeCode(Writer self) throws IOException {
+        self.write(this.toString());
+    }
+
+    @Override
+    public void serializeExpression(HashSet<Long> completedIDs, Writer output) throws IOException {
+        StringWriter self = new StringWriter();
+        self.write("(lambda ( ");
+        for (String argument : arguments) {
+            self.write(argument);
+            self.write(' ');
+        }
+        self.write(") ");
+
+        for (Expression expression : body) {
+            expression.serializeCode(self);
+            self.write(' ');
+        }
+
+        self.write(")");
+
+        registerSelf(completedIDs, output, self.toString());
+    }
 
     @Override
     public String toString() {

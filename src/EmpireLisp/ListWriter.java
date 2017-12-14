@@ -13,8 +13,9 @@ public class ListWriter {
     /**
      * Pushes an expression to the list.
      *
-     * @param expression
+     * @param expression The expression to add to the list
      */
+    @SuppressWarnings("WeakerAccess")
     public void push(Expression expression) {
         if (result == null) {
             result = new ExpressionPair(expression, Environment.nilValue);

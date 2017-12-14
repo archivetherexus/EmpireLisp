@@ -1,13 +1,8 @@
 package EmpireLisp;
 
-import java.io.ByteArrayInputStream;
-import java.io.PushbackInputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * An Environment contains a HashMap of Expressions that can be accessed through a string value.
@@ -101,11 +96,28 @@ public class Environment {
         }
     }
 
+    public void serializeEnvironment(OutputStreamWriter output) throws IOException {
+        HashSet<Long> completedIDs = new HashSet<>();
+        output.write(";; References:\n");
+        for (Expression expression : map.values()) {
+            if (!(expression instanceof ExpressionPrimitive)) {
+                expression.serializeExpression(completedIDs, output);
+            }
+        }
+        output.write("\n;; Bindings:\n");
+        for (Map.Entry<String, Expression> set : map.entrySet()) {
+            if (!(set.getValue() instanceof ExpressionPrimitive)) {
+                output.write("(define " + set.getKey() + " " + Expression.ID_NUMBER_PREFIX + set.getValue().expressionID + ")\n");
+            }
+        }
+    }
+
     /**
      * Creates and populates an environment with all the standard procedures and constants.
      *
      * @return The created standard environment.
      */
+    @SuppressWarnings("WeakerAccess")
     public static Environment makeStandardEnvironment() {
         Environment environment = new Environment(null);
 

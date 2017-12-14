@@ -1,5 +1,9 @@
 package EmpireLisp;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
+
 /**
  * A number value as an Expression.
  *
@@ -14,7 +18,19 @@ public class ExpressionNumber extends Expression {
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionNumber(double number) {
+        super();
+
         this.number = number;
+    }
+
+    @Override
+    public void serializeCode(Writer output) throws IOException {
+        output.write(Double.toString(number));
+    }
+
+    @Override
+    public void serializeExpression(HashSet<Long> completedIDs, Writer output) throws IOException {
+        registerSelf(completedIDs, output, Double.toString(number));
     }
 
     @Override

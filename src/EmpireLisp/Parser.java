@@ -92,12 +92,19 @@ public class Parser {
      * @return The parsed expression.
      * @throws LispException May throw a "missing-parentheses" error if necessary.
      */
+    @SuppressWarnings("WeakerAccess")
     public Expression parseExpression(PushbackInputStream stream) throws LispException {
         Expression result;
         String token = readToken(stream);
 
         if (token == null) {
-            throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing right-angel parentheses!");
+            if (parenthesesCount > 0) {
+                parenthesesCount = 0;
+                throw new LispException(LispException.ErrorType.PARSE_ERROR, "Missing right-angel parentheses!");
+            }
+            else {
+                return Environment.nilValue;
+            }
         } else if (token.equals("(")) {
             parenthesesCount++;
             ListWriter list = new ListWriter();
@@ -131,6 +138,7 @@ public class Parser {
      * @param string The string to convert.
      * @return The new stream.
      */
+    @SuppressWarnings("WeakerAccess")
     public static PushbackInputStream fromString(String string) {
         try {
             return new PushbackInputStream(new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8.name())));

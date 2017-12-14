@@ -1,5 +1,9 @@
 package EmpireLisp;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
+
 /**
  * A symbol as an Expression.
  *
@@ -14,7 +18,19 @@ public class ExpressionSymbol extends Expression {
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionSymbol(String symbol) {
+        super();
+
         this.symbol = symbol.toLowerCase();
+    }
+
+    @Override
+    public void serializeCode(Writer output) throws IOException {
+        output.write(symbol);
+    }
+
+    @Override
+    public void serializeExpression(HashSet<Long> completedIDs, Writer output) throws IOException {
+        registerSelf(completedIDs, output, "(quote " + symbol + ")");
     }
 
     @Override

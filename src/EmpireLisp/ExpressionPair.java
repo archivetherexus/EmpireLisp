@@ -1,8 +1,8 @@
 package EmpireLisp;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 /**
  * A pair as an Expression.
@@ -20,8 +20,37 @@ public class ExpressionPair extends Expression implements ISequence {
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionPair(Expression left, Expression right) {
+        super();
+
         this.left = left;
         this.right = right;
+    }
+
+    @Override
+    public void serializeCode(Writer output) throws IOException {
+        Iterator<Expression> i = iterator();
+        if (i.hasNext()) {
+            output.write('(');
+            do {
+                i.next().serializeCode(output);
+                if (i.hasNext()) {
+                    output.write(' ');
+                } else {
+                    output.write(')');
+                }
+            } while (i.hasNext());
+        }
+        else {
+            output.write("()");
+        }
+    }
+
+    @Override
+    public void serializeExpression(HashSet<Long> completedIDs, Writer output) throws IOException {
+        left.serializeExpression(completedIDs, output);
+        right.serializeExpression(completedIDs, output);
+        String self = "(cons " + ID_NUMBER_PREFIX + left.expressionID + " " + ID_NUMBER_PREFIX + right.expressionID + ")";
+        registerSelf(completedIDs, output, self);
     }
 
     @Override

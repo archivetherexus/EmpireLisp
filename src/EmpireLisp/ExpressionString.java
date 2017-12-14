@@ -1,5 +1,8 @@
 package EmpireLisp;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
 import java.util.Iterator;
 
 /**
@@ -16,8 +19,22 @@ public class ExpressionString extends Expression implements ISequence {
 
     @SuppressWarnings("WeakerAccess")
     public ExpressionString(String string) {
+        super();
+
         this.string = string;
         length = new ExpressionNumber(string.length());
+    }
+
+    @Override
+    public void serializeCode(Writer output) throws IOException {
+        output.write('"');
+        output.write(string);
+        output.write('"');
+    }
+
+    @Override
+    public void serializeExpression(HashSet<Long> completedIDs, Writer output) throws IOException {
+        registerSelf(completedIDs, output, "\"" + string + "\"");
     }
 
     @Override

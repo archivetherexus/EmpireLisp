@@ -29,7 +29,8 @@ public class Main {
 
     }
 
-    static void REPL(Scanner scanner) {
+    @SuppressWarnings("Convert2Lambda")
+    private static void REPL(Scanner scanner) {
         ExampleEvaluator evaluator = new ExampleEvaluator(64);
 
         /* Print will be our interface to the outer-world. */
@@ -59,11 +60,27 @@ public class Main {
             }
         });
 
+        evaluator.environment.setVariable("save", new ExpressionPrimitive() {
+            @Override
+            public void apply(IEvaluator evaluator, Environment environment, ExpressionPair arguments, IEvalCallback callback) throws LispException {
+                try {
+                    OutputStreamWriter output = new OutputStreamWriter(System.err);
+                    environment.serializeEnvironment(output);
+                    output.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         while (running) {
             try {
                 if (evaluator.done()) {
                     System.out.print("> ");
-                    evaluator.eval(scanner.nextLine());
+                    String input = scanner.nextLine();
+                    if (input.length() > 0) {
+                        evaluator.eval(input);
+                    }
                 } else {
                     evaluator.run();
                 }
